@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12213a">
+  <title>Triết học - Mác và LêNin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101a2b; --panel: #1a2940; --text: #f5f7fb;
+      --muted: #b7c4d6; --accent: #f4c95d; --good: #69d6a5; --bad: #ff8290;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh; margin: 0; padding: 28px 16px; color: var(--text);
+      background: radial-gradient(ellipse at 10% 0%, #233d60 0, transparent 38%),
+        radial-gradient(ellipse at 100% 100%, #293458 0, transparent 34%), var(--bg);
+      font: 16px/1.55 system-ui, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, select, label { font: inherit; touch-action: manipulation; }
+    body.menu-open { overflow: hidden; }
+    .game { width: min(850px, 100%); margin: 0 auto; }
+    .topline, .stats, .actions, .question-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .topline { color: var(--accent); font-weight: 750; letter-spacing: .08em; }
+    h1 { margin: 8px 0 4px; font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.15; }
+    .intro { margin: 0 0 22px; color: var(--muted); }
+    .lesson-switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .lesson-switch button { color: var(--text); background: #ffffff12; border: 1px solid #ffffff25; }
+    .lesson-switch button.active { color: #192338; background: var(--accent); border-color: var(--accent); }
+    .stats { margin: 18px 0 12px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px;
+      border: 1px solid #ffffff20; border-radius: 999px; background: #ffffff0b; font-weight: 700;
+    }
+    .progress { height: 9px; overflow: hidden; border-radius: 99px; background: #ffffff20; }
+    .progress > div { height: 100%; width: 0; border-radius: inherit; background: var(--accent); transition: width .25s ease; }
+    .topline { display: flex; align-items: center; justify-content: space-between; }
+    .menu-toggle {
+      display: grid;
+      gap: 5px;
+      width: 44px;
+      height: 40px;
+      padding: 9px;
+      border: 1px solid #ffffff35;
+      border-radius: 10px;
+      background: #ffffff12;
+    }
+    .menu-toggle span { display: block; height: 2px; border-radius: 2px; background: var(--accent); }
+    .menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 19;
+      border: 0;
+      border-radius: 0;
+      background: #050a12b8;
+    }
+    .question-nav {
+      position: fixed;
+      z-index: 20;
+      inset: 0 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      width: min(460px, 92vw);
+      padding: 20px;
+      border-left: 1px solid #ffffff25;
+      background: var(--panel);
+      box-shadow: -18px 0 50px #0006;
+    }
+    .question-nav[hidden], .menu-backdrop[hidden] { display: none; }
+    .nav-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .nav-header h2 { margin: 0; color: var(--accent); font-size: 1.15rem; }
+    .nav-close { padding: 7px 12px; color: var(--text); background: #ffffff18; }
+    .question-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-content: start;
+      gap: 8px;
+      min-height: 0;
+      overflow-y: auto;
+      margin-top: 16px;
+      padding-right: 4px;
+    }
+    .question-nav .question-link {
+      display: block;
+      width: 100%;
+      padding: 11px 6px;
+      border: 1px solid #ffffff20;
+      border-radius: 10px;
+      color: var(--text);
+      background: #ffffff09;
+      text-align: center;
+      font-weight: 700;
+    }
+    .question-nav .question-link:hover { background: #ffffff18; }
+    .question-nav .question-link.current { border-color: var(--accent); color: var(--accent); background: #f4c95d20; }
+    .question-nav .question-link.done { border-color: #69d6a580; color: var(--good); }
+    .question-nav .question-link.current.done { color: var(--accent); }
+    .card {
+      margin-top: 20px; padding: clamp(18px, 4vw, 30px); border: 1px solid #ffffff20;
+      border-radius: 20px; background: linear-gradient(145deg, #1d2c44f5, #17253af5);
+      box-shadow: 0 18px 50px #0005;
+    }
+    .question-head { justify-content: flex-start; margin-bottom: 12px; }
+    .number { color: var(--accent); font-weight: 800; }
+    .kind { color: var(--muted); font-size: .88rem; }
+    #prompt { margin: 0 0 18px; font-size: clamp(1.15rem, 3vw, 1.45rem); line-height: 1.4; }
+    #hint { color: var(--muted); font-size: .92rem; }
+    .options { display: grid; gap: 10px; }
+    .option {
+      display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px;
+      border: 1px solid #ffffff24; border-radius: 12px; background: #ffffff08;
+      cursor: pointer; transition: border-color .15s, background .15s, transform .15s;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .option:hover { border-color: #f4c95d88; background: #f4c95d10; transform: translateY(-1px); }
+    .option:has(input:checked) { border-color: var(--accent); background: #f4c95d18; }
+    .option input { flex: 0 0 auto; margin: 5px 0 0; accent-color: var(--accent); }
+    .option.truth-correct, .option.truth-correct:has(input:checked) { border-color: var(--good); background: #69d6a51a; }
+    .option.truth-incorrect, .option.truth-incorrect:has(input:checked) { border-color: var(--bad); background: #ff77771a; }
+    .option.choice-correct, .option.choice-correct:has(input:checked) { border-color: var(--good); background: #69d6a51a; }
+    .option.choice-incorrect, .option.choice-incorrect:has(input:checked) { border-color: var(--bad); background: #ff77771a; }
+    .truth-feedback { min-height: 22px; margin: 8px 0 0; font-weight: 700; }
+    .truth-feedback.good { color: var(--good); }
+    .truth-feedback.bad { color: var(--bad); }
+    .drag-bank { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 22px; }
+    .drag-chip {
+      padding: 9px 13px;
+      border: 1px solid #ffffff35;
+      border-radius: 999px;
+      color: var(--text);
+      background: #ffffff10;
+      font-weight: 600;
+      cursor: grab;
+      touch-action: manipulation;
+    }
+    .drag-chip.selected { border-color: var(--accent); background: #f4c95d25; }
+    .drop-target {
+      min-height: 76px;
+      margin: 12px 0;
+      padding: 12px 15px;
+      border: 2px dashed #ffffff45;
+      border-radius: 12px;
+      background: #ffffff08;
+    }
+    .drop-target.over { border-color: var(--accent); background: #f4c95d15; }
+    .drop-label { margin-bottom: 8px; font-weight: 750; }
+    .drop-answer { min-height: 32px; color: var(--muted); }
+    .drop-answer .drag-chip { cursor: pointer; }
+    .match-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; align-items: center; margin: 10px 0; }
+    .match-row select {
+      width: 100%; min-width: 0; padding: 10px; border: 1px solid #ffffff30;
+      border-radius: 9px; color: var(--text); background: #223550;
+    }
+    .match-row select option { color: #17253a; background: white; }
+    #feedback { min-height: 28px; margin: 14px 0 0; font-weight: 700; }
+    #feedback.good { color: var(--good); } #feedback.bad { color: var(--bad); }
+    .actions { justify-content: flex-end; margin-top: 16px; }
+    button {
+      padding: 11px 18px; border: 0; border-radius: 10px; color: #192338;
+      background: var(--accent); font-weight: 800; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.07); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.secondary { color: var(--text); background: #ffffff18; }
+    button[hidden] { display: none; }
+    #summary {
+      display: none; margin-top: 20px; padding: 26px; text-align: center;
+      border: 1px solid #f4c95d65; border-radius: 20px; background: var(--panel);
+    }
+    #summary h2 { margin: 0 0 8px; color: var(--accent); }
+    .small { color: var(--muted); font-size: .9rem; }
+    @media (max-width: 560px) {
+      body { padding: 16px 10px; } .stats { flex-wrap: wrap; align-items: flex-start; }
+      h1 { font-size: clamp(1.65rem, 8vw, 2.2rem); }
+      .lesson-switch { gap: 6px; }
+      .lesson-switch button { min-height: 44px; flex: 1 1 82px; padding: 9px 8px; }
+      .stats { gap: 6px; }
+      .pill { min-height: 38px; }
+      .menu-toggle { width: 48px; height: 48px; padding: 12px; }
+      .question-nav {
+        width: 100%;
+        max-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+      }
+      .nav-header { min-height: 48px; }
+      .nav-close { min-height: 44px; }
+      .question-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        flex: 1;
+        max-height: none;
+        margin-top: 10px;
+        padding-bottom: 10px;
+      }
+      .question-nav .question-link { min-height: 48px; }
+      .card { margin-top: 14px; padding: 16px 12px; }
+      #prompt { overflow-wrap: anywhere; }
+      .option { min-height: 48px; padding: 12px 10px; }
+      .option input { width: 20px; height: 20px; }
+      .actions { gap: 8px; }
+      .actions button { min-height: 48px; }
+      .match-row { grid-template-columns: 1fr; gap: 6px; }
+      .actions { justify-content: stretch; } .actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <div class="topline">
+      <span>🎓 HỌC MÀ CHƠI</span>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Mở danh sách câu hỏi" aria-expanded="false" aria-controls="questionNav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <h1>Chinh phục Triết học</h1>
+    <p class="intro" id="lessonIntro">Khám phá triết học và triết học Mác - Lênin. Trả lời câu hỏi để tích lũy điểm và giữ chuỗi chính xác!</p>
+    <div class="lesson-switch" aria-label="Chọn bài học">
+      <button id="lesson1Button" class="active" type="button" aria-pressed="true">Bài 1</button>
+      <button id="lesson2Button" type="button" aria-pressed="false">Bài 2</button>
+      <button id="lesson3Button" type="button" aria-pressed="false">Bài 3</button>
+      <button id="lesson4Button" type="button" aria-pressed="false">Bài 4</button>
+      <button id="lesson5Button" type="button" aria-pressed="false">Bài 5</button>
+      <button id="lesson6Button" type="button" aria-pressed="false">Bài 6</button>
+      <button id="lesson7Button" type="button" aria-pressed="false">Bài 7</button>
+      <button id="lesson8Button" type="button" aria-pressed="false">Bài 8</button>
+      <button id="lesson9Button" type="button" aria-pressed="false">Bài 9</button>
+    </div>
+    <div class="stats">
+      <span class="pill">⭐ Điểm: <span id="score">0</span></span>
+      <span class="pill">🔥 Chuỗi: <span id="streak">0</span></span>
+      <span class="pill">🧩 <span id="count">1/31</span></span>
+    </div>
+    <div class="progress" id="progress" role="progressbar" aria-label="Tiến độ trò chơi" aria-valuemin="0" aria-valuemax="31" aria-valuenow="0">
+      <div id="progressBar"></div>
+    </div>
+    <button class="menu-backdrop" id="menuBackdrop" type="button" aria-label="Đóng danh sách câu hỏi" hidden></button>
+    <nav id="questionNav" class="question-nav" aria-label="Danh sách câu hỏi" hidden>
+      <div class="nav-header">
+        <h2>Tất cả câu hỏi · Bài 1</h2>
+        <button class="nav-close" id="menuClose" type="button">Đóng</button>
+      </div>
+      <div class="question-list" id="questionList"></div>
+    </nav>
+    <section class="card" id="quizCard" aria-live="polite">
+      <div class="question-head">
+        <span class="number" id="questionNumber"></span>
+        <span class="kind" id="questionKind"></span>
+      </div>
+      <h2 id="prompt"></h2>
+      <p id="hint"></p>
+      <div class="options" id="options"></div>
+      <p id="feedback"></p>
+      <div class="actions">
+        <button class="secondary" id="checkButton" type="button">Kiểm tra đáp án</button>
+        <button id="nextButton" type="button" hidden>Câu tiếp theo →</button>
+      </div>
+    </section>
+    <section id="summary">
+      <h2 id="summaryTitle">Hoàn thành chặng!</h2>
+      <p id="summaryText"></p>
+      <button id="restartButton" type="button">Chơi lại từ đầu</button>
+    </section>
+  </main>
+  <script>
+    const lesson1Questions = [
+      { text: "Đối tượng nghiên cứu của triết học là gì?", options: [
+        "Những quy luật vận động, phát triển chung nhất của tự nhiên, xã hội và tư duy",
+        "Những quy luật vận động của tự nhiên, xã hội",
+        "Những quy luật vận động, phát triển của tự nhiên, xã hội và tư duy",
+        "Những quy luật hình thành của xã hội và tư duy"
+      ], answer: [0] },
+      { text: "Chức năng của triết học Mác - Lênin là gì? Chọn 2 đáp án đúng", options: [
+        "Chức năng nâng tầm cầu nối cho các khoa học", "Chức năng thế giới quan",
+        "Chức năng phương pháp luận", "Chức năng khoa học của các khoa học"
+      ], answer: [1, 2], multi: true },
+      { text: "Triết học ra đời từ đâu?", options: [
+        "Từ sự vận động của ý muốn chủ quan của con người",
+        "Từ sự suy tư của con người về bản thân mình",
+        "Từ sự sáng tạo của nhà tư tưởng", "Từ thực tiễn, do nhu cầu của thực tiễn"
+      ], answer: [3] },
+      { text: "Triết học Mác - Lênin là gì? (Chọn 2 đáp án đúng)", options: [
+        "Là khoa học nghiên cứu những quy luật chung nhất của tự nhiên",
+        "Hệ thống quan điểm duy vật biện chứng về tự nhiên, xã hội và tư duy",
+        "Là thế giới quan và phương pháp luận khoa học, cách mạng của giai cấp công nhân, nhân dân lao động và các lực lượng xã hội tiến bộ trong nhận thức và cải tạo thế giới",
+        "Là khoa học nghiên cứu về con người"
+      ], answer: [1, 2], multi: true },
+      { text: "Thực chất và ý nghĩa cuộc cách mạng trong triết học do C.Mác và Ph.Ăngghen thực hiện là khắc phục: (Chọn 2 đáp án đúng)", options: [
+        "Tính chất trực quan, siêu hình của phép biện chứng duy tâm",
+        "Tính chất duy tâm, thần bí của chủ nghĩa duy vật cũ",
+        "Kế thừa tư duy nhân loại", "Mở rộng quan điểm duy vật siêu hình"
+      ], answer: [0, 1], multi: true },
+      { text: "Khẳng định nào sau đây về triết học Mác - Lênin là sai?", options: [
+        "Triết học Mác - Lênin có sự thống nhất giữa phương pháp biện chứng và thế giới quan duy vật",
+        "Triết học Mác - Lênin là chủ nghĩa duy vật biện chứng",
+        "Triết học Mác - Lênin là sự kết hợp phép biện chứng của Hêghen và chủ nghĩa duy vật của Phoi-ơ-bắc",
+        "Triết học Mác - Lênin kế thừa và cải tạo Phép biện chứng của Hêghen trên cơ sở duy vật"
+      ], answer: [2] },
+      { text: "Hình ảnh \"Ông Bụt\" trong các câu truyện cổ tích Việt Nam thể hiện thế giới quan nào trong triết học?", options: [
+        "Thế giới quan thần thoại", "Thế giới quan cổ đại",
+        "Thế giới quan thần thánh", "Thế giới quan duy tâm"
+      ], answer: [0] },
+      { text: "Vai trò của triết học Mác - Lênin trong bối cảnh toàn cầu hóa là gì?", options: [
+        "Là công cụ bảo vệ nền văn hóa ngoại lai", "Là hình thức thúc đẩy toàn cầu hóa",
+        "Là công cụ đấu tranh chống lại toàn cầu hóa",
+        "Là cơ sở phân tích xu hướng vận động, phát triển của toàn cầu hóa và xã hội hiện đại"
+      ], answer: [3] },
+      { text: "Triết học Mác - Lênin là cơ sở lý luận khoa học của sự nghiệp đổi mới theo định hướng xã hội chủ nghĩa ở Việt Nam vì: (Chọn 2 đáp án đúng)", options: [
+        "Là học thuyết duy nhất về phát triển xã hội", "Được các nhà lãnh đạo ưa chuộng",
+        "Góp phần tìm được lời giải đáp về con đường đi lên chủ nghĩa xã hội ở Việt Nam",
+        "Dựa trên cơ sở lý luận khoa học, trong đó hạt nhân là phép biện chứng duy vật"
+      ], answer: [2, 3], multi: true },
+      { text: "Triết học Mác - Lênin có vai trò quan trọng trong việc phân tích các vấn đề xã hội hiện đại vì:", options: [
+        "Triết học Mác - Lênin làm nền tảng tư tưởng cho sự nghiệp đổi mới theo định hướng xã hội chủ nghĩa",
+        "Vì triết học Mác - Lênin phản ánh đúng bản chất của các hiện tượng xã hội và quy luật vận động của chúng",
+        "Vì cải biến về chất các lực lượng sản xuất trên cơ sở tri thức khoa học",
+        "Kết hợp chặt chẽ tri thức triết học và tri thức khoa học chuyên ngành"
+      ], answer: [1] },
+      { text: "Mối quan hệ giữa triết học Mác - Lênin và cách mạng khoa học công nghệ được thể hiện như thế nào?", options: [
+        "Triết học Mác - Lênin là sản phẩm của cách mạng khoa học công nghệ",
+        "Cách mạng khoa học công nghệ làm triết học Mác - Lênin trở nên lạc hậu",
+        "Triết học Mác - Lênin là cơ sở lý luận - phương pháp luận cho các phát minh khoa học",
+        "Triết học Mác - Lênin là cơ sở lý luận truyền bá tri thức khoa học"
+      ], answer: [2] },
+      { text: "Yếu tố nào là cơ sở để Đảng Cộng sản Việt Nam vận dụng xây dựng cương lĩnh cuộc đổi mới toàn diện xã hội theo định hướng xã hội chủ nghĩa?", options: [
+        "Chỉ cần phương pháp luận của triết học Mác - Lênin",
+        "Cơ sở lý luận khoa học, trong đó hạt nhân là phép biện chứng duy vật của triết học Mác - Lênin",
+        "Chỉ cần thế giới quan của triết học Mác - Lênin",
+        "Kinh nghiệm, cá nhân của lãnh đạo và các mô hình kinh tế phương Tây"
+      ], answer: [1] },
+      { text: "Kéo thả các nội dung liệt kê dưới đây vào cột tương ứng:", type: "drag",
+        items: [
+          "Thế giới quan kinh nghiệm",
+          "Định hướng cho con người nhận thức",
+          "Hệ thống các tri thức, quan điểm, tình cảm, niềm tin, lý tưởng",
+          "Bản thân triết học chính là thế giới quan",
+          "Thế giới quan tôn giáo",
+          "Thế giới quan thông thường",
+          "Giúp con người phát triển tư duy khoa học"
+        ],
+        targets: ["Chức năng thế giới quan là:", "Chức năng phương pháp luận là:"],
+        answer: [1, 6]
+      },
+      { text: "Kéo thả các nội dung liệt kê dưới đây vào các cột tương ứng:", type: "drag",
+        items: [
+          "Cho con người trong nhận thức và thực tiễn",
+          "Của công cuộc xây dựng chủ nghĩa xã hội trên thế giới",
+          "Công cụ đấu tranh chống lại toàn cầu hóa",
+          "Sự nghiệp đổi mới theo định hướng xã hội chủ nghĩa ở Việt Nam"
+        ],
+        targets: [
+          "Triết học Mác - Lênin là thế giới quan, phương pháp luận khoa học và cách mạng:",
+          "Triết học Mác - Lênin là cơ sở lý luận khoa học:"
+        ],
+        targetAnswers: [[0], [1, 3]]
+      },
+      { text: "Công cuộc đổi mới toàn diện xã hội theo định hướng xã hội chủ nghĩa ở Việt Nam là: (Chọn 2 đáp án đúng)?", options: [
+        "Triết học Mác - Lênin là cơ sở thế giới quan để phân tích xu hướng vận động, phát triển của xã hội hiện đại",
+        "Thế giới quan triết học Mác - Lênin đã giúp Đảng Cộng sản Việt Nam nhận ra con đường đi lên chủ nghĩa xã hội",
+        "Được mở đường bằng đổi mới tư duy lý luận",
+        "Giúp cho con người khi bắt tay vào nghiên cứu và hoạt động cải biến sự vật"
+      ], answer: [1, 2], multi: true },
+      { text: "Điều kiện kinh tế - xã hội cho sự ra đời của triết học Mác - Lênin? (Chọn 2 đáp án đúng)", options: [
+        "Thực tiễn cách mạng của giai cấp tư sản",
+        "Thực tiễn cách mạng của giai cấp vô sản là cơ sở chủ yếu nhất cho sự ra đời triết học Mác",
+        "Sự Củng cố và phát triển của phương thức sản xuất tư bản chủ nghĩa",
+        "Giai cấp tư sản ra đời và trở thành lực lượng chính trị độc lập"
+      ], answer: [1, 2], multi: true },
+      { text: "Chỉ ra những phát biểu nào Đúng, phát biểu nào Sai:", type: "truth", rows: [
+        ["Khẳng định triết học Mác khắc phục tính chất trực quan, siêu hình của chủ nghĩa duy vật cũ và khắc phục tính chất duy tâm, thần bí của phép biện chứng duy tâm là:", "Đúng"],
+        ["Khẳng định triết học Mác có sự thống nhất giữa phương pháp biện chứng và thế giới quan duy vật là:", "Đúng"],
+        ["Khẳng định C. Mác và Ph. Ăngghen đã vận dụng và mở rộng quan điểm duy vật biện chứng vào nghiên cứu lịch sử xã hội là:", "Đúng"],
+        ["Khẳng định triết học Mác là sự kết hợp phép biện chứng của Hêghen và chủ nghĩa duy vật của Phoi-ơ-bắc là:", "Sai"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Việc vận dụng sai lệch triết học Mác - Lênin dẫn đến hậu quả nào? (Câu trả lời lựa chọn 2 đáp án đúng)", options: [
+        "Tăng cường mọi hình thức hợp tác quốc tế", "Phát triển nhanh chóng nền kinh tế",
+        "Làm cho tư tưởng trở nên giáo điều, xơ cứng",
+        "Là một trong những nguyên nhân của sự khủng hoảng của chủ nghĩa xã hội thế giới"
+      ], answer: [2, 3], multi: true },
+      { text: "Những điều kiện lịch sử nào sau đây là cơ sở cho sự ra đời của triết học Mác? (Chọn 2 đáp án đúng)", options: [
+        "Phong trào giải phóng dân tộc ở các nước thuộc địa",
+        "Sự phát triển của chủ nghĩa duy vật siêu hình",
+        "Sự củng cố và phát triển của phương thức sản xuất tư bản chủ nghĩa",
+        "Sự xuất hiện của giai cấp vô sản trên vũ đài lịch sử"
+      ], answer: [2, 3], multi: true },
+      { text: "Các hình thức của chủ nghĩa duy tâm là?", options: [
+        "Chủ nghĩa duy tâm chất phác và chủ nghĩa duy tâm siêu hình",
+        "Chủ nghĩa duy tâm biện chứng và chủ nghĩa duy tâm khách quan",
+        "Chủ nghĩa duy tâm siêu hình và chủ nghĩa duy tâm biện chứng",
+        "Chủ nghĩa duy tâm khách quan và chủ nghĩa duy tâm chủ quan"
+      ], answer: [3] },
+      { text: "Triết học Mác - Lênin nói chung có giá trị định hướng quan trọng cho con người trong nhận thức và hoạt động thực tiễn của mình vì:", options: [
+        "Tri thức thực tiễn (trong đó có sự hiểu biết tình hình thực tiễn và trình độ tay nghề) là yếu tố duy nhất quyết định thành công",
+        "Kết hợp chặt chẽ tri thức triết học và tri thức khoa học chuyên ngành",
+        "Giúp con người thấy trước được phương hướng vận động chung của đối tượng, tránh được những lầm lạc hay mò mẫm",
+        "Triết học Mác - Lênin luôn đúng trong nhận thức và hoạt động thực tiễn"
+      ], answer: [2] },
+      { text: "Triết học ra đời sớm nhất ở đâu?", options: [
+        "Ai Cập, Hy Lạp, Ấn Độ", "Ấn Độ, Trung Quốc, Hy Lạp",
+        "Ai Cập, Ấn Độ, Trung Quốc", "Ấn Độ, châu Phi, Nga"
+      ], answer: [1] },
+      { text: "Những phát minh khoa học tự nhiên nửa đầu thế kỷ XIX đã cung cấp cơ sở tri thức khoa học cho sự phát triển của cái gì?", options: [
+        "Phát triển tính thần bí của phép biện chứng duy vật",
+        "Phát triển tư duy biện chứng thoát khỏi tính tự phát thời kỳ cổ đại và thoát khỏi căn rễ thần bí của phép biện chứng duy tâm",
+        "Phát triển phép biện chứng tự phát", "Phát triển phương pháp tư duy siêu hình"
+      ], answer: [1] },
+      { text: "Trong sự phát triển của xã hội hiện đại, triết học Mac-Lenin đóng vai trò gì?", options: [
+        "Phân tích xu hướng phát triển của xã hội hiện đại dưới góc nhìn khoa học và cách mạng",
+        "Bảo vệ lợi ích của chủ nghĩa tư bản", "Không thúc đẩy hợp tác giữa các quốc gia",
+        "Hợp thức hóa mọi hình thức hợp tác quốc tế"
+      ], answer: [0] },
+      { text: "Khẳng định nào sau đây là sai? (Chọn 2 đáp án trả lời sai)", options: [
+        "Theo quan điểm của triết học Mác: sự phát triển của triết học quan hệ chặt chẽ với sự phát triển của khoa học tự nhiên",
+        "Triết học Mác có sự thống nhất giữa phương pháp biện chứng và thế giới quan duy vật",
+        "Theo quan điểm của triết học Mác: triết học thay thế được các khoa học cụ thể",
+        "Triết học Mác cho triết học là khoa học của mọi khoa học"
+      ], answer: [2, 3], multi: true },
+      { text: "Biểu hiện nào phản ánh đúng bản chất của các cuộc cách mạng khoa học và công nghệ hiện đại?", options: [
+        "Tăng trưởng dân số nhanh chóng",
+        "Cải biến về chất các lực lượng sản xuất trên cơ sở tri thức khoa học",
+        "Cơ sở lý luận cho các phát minh khoa học",
+        "Phát triển mạnh mẽ của ngành nông nghiệp, công nghiệp"
+      ], answer: [1] },
+      { text: "Một trong những hạn chế trong việc vận dụng triết học Mác - Lênin trước đây là:", options: [
+        "Luôn bổ sung, phát triển tư duy lý luận theo tình hình mới",
+        "Kết hợp lý luận với thực tiễn", "Áp dụng một cách máy móc, giáo điều",
+        "Vận dụng triết học Mác - Lênin để đánh giá cục diện thế giới và các mối quan hệ quốc tế"
+      ], answer: [2] },
+      { text: "Chỉ ra khẳng định nào đúng, khẳng định nào sai?", type: "truth", rows: [
+        ["1) Nhận thức và vận dụng triết học Mác - Lênin một cách máy móc, thiếu sáng tạo không phải là nguyên nhân dẫn đến khủng hoảng trong chủ nghĩa xã hội thế giới", "Sai"],
+        ["2) Triết học Mác - Lênin giúp định hướng phát triển xã hội trong điều kiện cuộc cách mạng khoa học và công nghệ hiện đại.", "Đúng"],
+        ["3) Việc nhận thức và vận dụng lý luận Mác - Lênin một cách giáo điều, xơ cứng không ảnh hưởng đến sự phát triển của chủ nghĩa xã hội thế giới", "Sai"],
+        ["4)Khẳng định vai trò của triết học Mác - Lênin làm nền tảng tư tưởng cho sự nghiệp đổi mới theo định hướng xã hội chủ nghĩa là:", "Đúng"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Vai trò của triết học Mác - Lênin trong cuộc cách mạng khoa học và công nghệ hiện đại?", options: [
+        "Là công cụ đấu tranh giai cấp", "Để đề cao triết học, hạ thấp khoa học",
+        "Là cơ sở lý luận - phương pháp luận cho các phát minh khoa học",
+        "Để đề cao các khoa học, hạ thấp triết học"
+      ], answer: [2] },
+      { text: "Triết học ra đời trong điều kiện nào? (Câu trả lời lựa chọn 2 đáp án đúng) (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Xã hội phân chia thành giai cấp", "Xuất hiện tầng lớp lao động trí óc",
+        "Xã hội phân chia thành giai cấp và xuất hiện tầng lớp lao động trí óc",
+        "Tư duy của con người đạt trình độ tự duy khái quát cao"
+      ], answer: [2, 3], multi: true },
+      { text: "Trong xã hội phong kiến, triết học Mác - Lênin đóng vai trò gì?", options: [
+        "Hãy phát triển nền khoa học hiện thực học các quốc tế",
+        "Không thúc đẩy học tập các quốc gia",
+        "Bảo vệ lợi ích của chủ nghĩa tư bản",
+        "Phân tích và thống phát triển các khái niệm bất diệt, đóng vai trò hình thành triết học hiện thực học các quốc tế"
+      ], answer: [3] }
+    ];
+
+    const lesson2Questions = [
+      { text: "Theo V.I. Lênin, ngoài thuộc tính tồn tại khách quan thì vật chất dưới những dạng tồn tại cụ thể của nó là cái có thể: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Gây nên cảm giác ở con người",
+        "Tồn tại trong cảm giác của con người",
+        "Tồn tại không lệ thuộc vào cảm giác",
+        "Tồn tại trong ý thức của con người"
+      ], answer: [0, 2], multi: true },
+      { text: "Theo chủ nghĩa duy vật biện chứng, thuộc tính cơ bản, phổ biến nhất của mọi dạng vật chất là:", options: [
+        "Vừa tồn tại khách quan, vừa tồn tại chủ quan",
+        "Tồn tại",
+        "Tồn tại khách quan",
+        "Tồn tại chủ quan"
+      ], answer: [2] },
+      { text: "Giá trị định nghĩa vật chất của V.I. Lênin trong bối cảnh khoa học hiện đại: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vẫn giữ nguyên giá trị khoa học và triết học",
+        "Đã trở nên không còn phù hợp với các phát hiện khoa học mới",
+        "Được củng cố thêm bởi những thành tựu của khoa học tự nhiên và xã hội hiện đại",
+        "Chỉ có giá trị trong phạm vi triết học mà không có ý nghĩa đối với khoa học thực nghiệm"
+      ], answer: [0, 2], multi: true },
+      { text: "Theo chủ nghĩa duy vật biện chứng, hình thức vận động xã hội cao nhất là?", options: [
+        "Là vận động của các hiện tượng kinh tế",
+        "Là vận động của các hệ tư tưởng trong lịch sử",
+        "Là vận động của lực lượng sản xuất",
+        "Là vận động của các hình thái kinh tế - xã hội"
+      ], answer: [3] },
+      { text: "Định nghĩa về vật chất của Lênin được nêu trong tác phẩm nào?", options: [
+        "Chủ nghĩa duy vật và chủ nghĩa kinh nghiệm phê phán",
+        "Biện chứng của tự nhiên",
+        "Nhà nước và cách mạng",
+        "Bút ký triết học"
+      ], answer: [0] },
+      { text: "Theo V.I.Lênin những phát minh của khoa học tự nhiên cuối thế kỷ XIX đầu thế kỷ XX đã làm tiêu tan cái gì?", options: [
+        "Tiêu tan dạng tồn tại cụ thể của vật chất",
+        "Ý thức tiêu tan",
+        "Tiêu tan vật chất nói chung",
+        "Tiêu tan giới hạn hiểu biết trước đây về vật chất"
+      ], answer: [3] },
+      { text: "Đặc điểm chung của quan niệm duy vật về vật chất ở thời kỳ cổ đại là gì?", options: [
+        "Đồng nhất vật chất nói chung với nguyên tử",
+        "Đồng nhất vật chất nói chung với một dạng cụ thể hữu hình, cảm tính của vật chất",
+        "Đồng nhất vật chất với khối lượng",
+        "Đồng nhất vật chất với ý thức"
+      ], answer: [1] },
+      { text: "Định nghĩa vật chất của V.I. Lênin góp phần như thế nào trong việc thống nhất hai bộ phận của triết học Mác - Lênin?", options: [
+        "Góp phần hợp nhất chủ nghĩa duy vật với chủ nghĩa duy tâm",
+        "Làm rõ mối liên hệ giữa phép biện chứng và chủ nghĩa duy vật lịch sử",
+        "Thống nhất chủ nghĩa duy vật biện chứng với chủ nghĩa duy vật lịch sử thành một hệ thống lý luận",
+        "Phân tách rõ ràng giữa tự nhiên và xã hội trong nghiên cứu triết học"
+      ], answer: [2] },
+      { text: "Điều khẳng định nào sau đây là sai?", options: [
+        "Chủ nghĩa duy vật biện chứng cho rằng động vật bậc cao chưa có ý thức",
+        "Chủ nghĩa duy vật biện chứng cho rằng động vật bậc cao cũng có ý thức",
+        "Chủ nghĩa duy vật biện chứng cho rằng chỉ có con người mới có ý thức",
+        "Chủ nghĩa duy vật đều cho ý thức là sự phản ánh hiện thực khách quan vào óc con người"
+      ], answer: [1] },
+      { text: "Chọn câu trả lời đúng theo quan điểm duy vật biện chứng:", options: [
+        "Ý thức có nguồn gốc từ mọi dạng vật chất giống như gan tiết ra mật",
+        "Ý thức của con người là hiện tượng bẩm sinh",
+        "Ý thức con người hình thành từ lao động sản xuất vật chất",
+        "Ý thức, tinh thần vốn của con người đã bị trừu tượng hóa, tách khỏi con người hiện thực thành một lực lượng thần bí"
+      ], answer: [2] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, nguồn gốc của ý thức là:", options: [
+        "Nguồn gốc tự nhiên và nguồn gốc xã hội",
+        "Nguồn gốc kinh tế và nguồn gốc văn hóa",
+        "Nguồn gốc xã hội và nguồn gốc kinh tế",
+        "Nguồn gốc tự nhiên và nguồn gốc nhận thức"
+      ], answer: [0] },
+      { text: "Trường phái triết học nào coi ý thức là hình ảnh chủ quan về thế giới khách quan?", options: [
+        "Chủ nghĩa duy vật biện chứng",
+        "Chủ nghĩa duy vật siêu hình",
+        "Chủ nghĩa duy tâm chủ quan",
+        "Chủ nghĩa duy tâm khách quan"
+      ], answer: [0] },
+      { text: "Điều khẳng định nào sau đây là sai? (Câu trả lời lựa chọn 2 đáp án sai)", options: [
+        "Chủ nghĩa duy vật biện chứng cho rằng động vật bậc cao chưa có ý thức",
+        "Chủ nghĩa duy vật biện chứng cho rằng động vật bậc cao cũng có ý thức",
+        "Chủ nghĩa duy vật biện chứng cho rằng chỉ có con người mới có ý thức",
+        "Chủ nghĩa duy vật đều cho ý thức có nguồn gốc xã hội và nguồn gốc kinh tế"
+      ], answer: [1, 3], multi: true },
+      { text: "Yếu tố nào sau đây là đặc trưng riêng của ý thức con người mà trí tuệ nhân tạo không có? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Khả năng xử lý số liệu nhanh chóng",
+        "Phản ánh năng động, sáng tạo hiện thực khách quan thông qua hoạt động nhận thức và thực tiễn",
+        "Khả năng lưu trữ thông tin lâu dài",
+        "Là sự phản ánh hiện thực khách quan vào bộ óc con người nhưng có sự sáng tạo, cải biến của chủ thể nhận thức."
+      ], answer: [1, 3], multi: true },
+      { text: "Khẳng định nào sau đây là SAI về tình hình triết học và khoa học đầu thế kỷ XX? (Câu trả lời lựa chọn 2 đáp án sai)", options: [
+        "Nhiều nhà khoa học đã trượt từ chủ nghĩa duy vật máy móc sang chủ nghĩa tương đối rồi rơi vào chủ nghĩa duy tâm",
+        "Những phát hiện mới về nguyên tử đã chứng minh tính đúng đắn của chủ nghĩa duy tâm",
+        "Chủ nghĩa duy vật siêu hình đã đủ khả năng giải thích các phát hiện mới của khoa học tự nhiên",
+        "Cuộc khủng hoảng trong vật lý học là minh chứng cho sự sụp đổ của chủ nghĩa duy vật nói chung"
+      ], answer: [1, 2], multi: true },
+      { text: "Định nghĩa vật chất của V.I. Lênin trong bối cảnh khoa học hiện đại: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vẫn giữ nguyên giá trị khoa học và triết học",
+        "Đã trở nên không còn phù hợp với các phát hiện khoa học mới",
+        "Chỉ có giá trị trong phạm vi triết học mà không có ý nghĩa đối với khoa học thực nghiệm",
+        "Được củng cố thêm bởi những thành tựu của khoa học tự nhiên và xã hội hiện đại"
+      ], answer: [0, 3], multi: true },
+      { text: "Theo chủ nghĩa duy vật biện chứng, các yếu tố cơ bản, trực tiếp tạo thành nguồn gốc xã hội của ý thức là gì?", options: [
+        "Lao động",
+        "Ngôn ngữ",
+        "Tri thức và ý chí",
+        "Kinh tế và văn hóa"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, quá trình hình thành ý thức là quá trình nào?", options: [
+        "Tiếp thu sự tác động của thế giới bên ngoài",
+        "Sáng tạo thuần tuý trong tư duy con người",
+        "Hoạt động chủ động cải tạo thế giới và phản ánh sáng tạo thế giới",
+        "Ý thức là sự phản ánh hiện thực khách quan vào bộ óc con người"
+      ], answer: [2] },
+      { text: "Đâu là quan điểm của chủ nghĩa duy vật biện chứng về bản chất của ý thức?", options: [
+        "Ý thức là sự phản ánh hiện thực khách quan vào bộ óc con người",
+        "Ý thức là sự phản ánh sáng tạo hiện thực khách quan vào bộ óc con người",
+        "Ý thức là năng lực của mọi dạng vật chất",
+        "Ý thức là hình ảnh phản chiếu về thế giới khách quan"
+      ], answer: [1] },
+      { text: "Hiện tượng phóng xạ mà khoa học tự nhiên phát hiện ra trong cuộc cách mạng trong khoa học tự nhiên cuối thế kỷ XIX, đầu thế kỷ XX chứng minh điều gì? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Nguyên tử là điện tử",
+        "Nguyên tử là bất biến",
+        "Cái bị tiêu tan không phải “vật chất tiêu tan”",
+        "Dấu hiệu của một cuộc cách mạng trong khoa học tự nhiên"
+      ], answer: [2, 3], multi: true },
+      { text: "Luận điểm cho: \"tồn tại tức là được cảm giác\" là của ai và thuộc lập trường triết học nào?", options: [
+        "Của Hêghen, thuộc lập trường của chủ nghĩa duy tâm khách quan",
+        "Của Béc-cơ-li, thuộc lập trường chủ nghĩa duy tâm chủ quan",
+        "Của Pla-tôn, thuộc lập trường chủ nghĩa duy tâm khách quan",
+        "Của A-ri-xtốt, thuộc lập trường chủ nghĩa duy vật"
+      ], answer: [1] },
+      { text: "Bộ phim hoạt hình \"Dế mèn: Cuộc phiêu lưu tới xóm lầy lội\" là sự phản ánh: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Là kết quả của việc tái hiện một cách trung thực hiện thực khách quan vào bộ óc con người",
+        "Là sự phản ánh hiện thực khách quan vào bộ óc con người nhưng có sự sáng tạo, cải biến của chủ thể nhận thức",
+        "Là quá trình phản ánh năng động, sáng tạo hiện thực khách quan thông qua hoạt động nhận thức và thực tiễn",
+        "Là hình ảnh phản chiếu trực tiếp thế giới khách quan lên ý thức con người như một tấm gương"
+      ], answer: [1, 2], multi: true },
+      { text: "Trong lĩnh vực xã hội, vật chất được hiểu theo nghĩa nào theo định nghĩa của V.I. Lênin?", options: [
+        "Là các yếu tố tinh thần như tư tưởng, tôn giáo và văn hóa",
+        "Là các điều kiện sinh hoạt vật chất và các quan hệ vật chất xã hội",
+        "Là những chính sách do nhà nước ban hành",
+        "Là ý thức và hoạt động có mục đích của con người"
+      ], answer: [1] },
+      { text: "Luận điểm nào sau đây là của chủ nghĩa duy vật biện chứng về nguồn gốc của ý thức? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Có não người, có sự tác động của thế giới vào não người là có sự hình thành và phát triển ý thức",
+        "Không cần sự tác động của thế giới vật chất vào não người vẫn hình thành được ý thức",
+        "Có não người và sự tác động của thế giới bên ngoài vẫn chưa đủ điều kiện để hình thành, phát triển ý thức",
+        "Nguồn gốc tự nhiên là điều kiện cần, nguồn gốc xã hội là điều kiện đủ để hình thành ý thức"
+      ], answer: [2, 3], multi: true },
+      { text: "Kéo thả các nội dung đã liệt kê dưới đây vào cột tương ứng:", type: "match", rows: [
+        ["Trong nguồn gốc xã hội của ý thức, ngôn ngữ là hệ thống tín hiệu gì?", "Tín hiệu vật chất mang nội dung ý thức"],
+        ["Vật chất là một phạm trù triết học dùng để chỉ:", "Thực tại khách quan"]
+      ], choices: ["Tín hiệu vật chất mang nội dung ý thức", "Thực tại khách quan"] },
+      { text: "Kéo thả các đáp án khớp với các phát biểu từ 1-4 vế trái dưới đây:", type: "match", rows: [
+        ["Nhà triết học nào coi lửa là thực thể đầu tiên của thế giới và đó là lập trường triết học nào?", "Hê-ra-clít - chủ nghĩa duy vật tự phát"],
+        ["Nhà triết học nào coi nước là thực thể đầu tiên của thế giới và đó là lập trường triết học nào?", "Talet - chủ nghĩa duy vật tự phát."],
+        ["Nhà triết học nào coi nguyên tử là thực thể đầu tiên của thế giới và đó là lập trường triết học nào?", "Đê-mô-crít - chủ nghĩa duy vật tự phát."],
+        ["Nhà triết học nào coi không khí là thực thể đầu tiên của thế giới và đó là lập trường triết học nào?", "Ana-ximen - chủ nghĩa duy vật tự phát."]
+      ], choices: [
+        "Hê-ra-clít - chủ nghĩa duy vật tự phát",
+        "Talet - chủ nghĩa duy vật tự phát.",
+        "Đê-mô-crít - chủ nghĩa duy vật tự phát.",
+        "Ana-ximen - chủ nghĩa duy vật tự phát."
+      ] },
+      { text: "Kéo thả nội dung đã liệt kê dưới đây vào cột tương ứng:", type: "drag",
+        items: [
+          "Biến các đối tượng vật chất được phản ánh thành hình ảnh tinh thần trong đầu óc con người",
+          "Khả năng tiếp nhận và xử lý thông tin",
+          "Tri thức mới, sự vật mới dựa trên hiện thực khách quan đã có"
+        ],
+        targets: [
+          "1) Theo quan điểm của chủ nghĩa duy vật biện chứng, tính sáng tạo của ý thức thể hiện:",
+          "2) Theo quan điểm của chủ nghĩa duy vật biện chứng, ý thức có thể tạo ra:"
+        ],
+        targetAnswers: [[0, 1], [2]]
+      },
+      { text: "Kéo thả các nội dung đã liệt kê dưới đây vào cột tương ứng:", type: "drag",
+        items: ["Thế giới khách quan và bộ óc người", "Lao động và ngôn ngữ"],
+        targets: [
+          "Theo quan điểm duy vật biện chứng, nguồn gốc tự nhiên của ý thức:",
+          "Theo quan điểm duy vật biện chứng, nguồn gốc xã hội của ý thức:"
+        ],
+        targetAnswers: [[0], [1]]
+      },
+      { text: "Chỉ ra các phát biểu nào đúng, phát biểu nào sai:", type: "truth", rows: [
+        ["1) Bản chất của ý thức theo quan điểm của chủ nghĩa duy vật biện chứng là sự phản ánh sáng tạo hiện thực khách quan vào bộ óc con người.", "Đúng"],
+        ["2) Bản chất của ý thức theo quan điểm của chủ nghĩa duy vật biện chứng là sự phản ánh hiện thực khách quan vào bộ óc con người.", "Sai"],
+        ["3) Bản chất của ý thức là năng lực của mọi dạng vật chất.", "Sai"],
+        ["4) Bản chất của ý thức là hình ảnh phản chiếu về thế giới khách quan.", "Sai"]
+      ], choices: ["Đúng", "Sai"] }
+    ];
+
+
+    const lesson3Questions = [
+      { text: "Quan điểm của chủ nghĩa duy vật siêu hình về mối quan hệ giữa vật chất và ý thức? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Tuyệt đối hoá yếu tố vật chất",
+        "Vật chất và ý thức tồn tại song song",
+        "Vật chất sinh ra ý thức, phủ nhận tính độc lập tương đối của ý thức",
+        "Ý thức quyết định vật chất"
+      ], answer: [0, 2], multi: true },
+      { text: "Theo triết học Mác - Lênin, trong nhận thức và hoạt động thực tiễn, mọi chủ trương, đường lối, kế hoạch, mục tiêu đều phải xuất phát từ:", options: [
+        "Kinh nghiệm lịch sử", "Lý thuyết trừu tượng", "Ý muốn chủ quan", "Thực tế khách quan"
+      ], answer: [3] },
+      { text: "Nguyên tắc phương pháp luận nào sau đây không đúng trong mối quan hệ giữa vật chất và ý thức?", options: [
+        "Phát huy tính năng động, sáng tạo của con người",
+        "Xuất phát từ thực tế khách quan",
+        "Kết hợp hài hòa lợi ích cá nhân và tập thể",
+        "Hành động theo ý chí, cảm tính"
+      ], answer: [3] },
+      { text: "Để tránh rơi vào chủ nghĩa duy tâm, cần làm gì?", options: [
+        "Tập trung vào suy nghĩ cá nhân",
+        "Dựa vào điều kiện vật chất thực tế, tôn trọng quy luật khách quan",
+        "Coi trọng lý thuyết hơn thực hành",
+        "Tin tưởng tuyệt đối vào ý thức"
+      ], answer: [1] },
+      { text: "Nếu chỉ tôn trọng tính khách quan mà không phát huy tính năng động chủ quan sẽ dẫn đến:", options: [
+        "Tiến bộ xã hội nhanh chóng",
+        "Tư duy máy móc, thụ động, trì trệ",
+        "Đổi mới mạnh mẽ",
+        "Sáng tạo đột phá"
+      ], answer: [1] },
+      { text: "Để vận dụng giải quyết đúng đắn mối quan hệ giữa vật chất và ý thức, chúng ta phải biết kết hợp hài hòa:", options: [
+        "Giữa vật chất và ý thức",
+        "Giữa chủ quan và khách quan",
+        "Giữa lý luận và thực tiễn",
+        "Giữa lợi ích cá nhân, lợi ích tập thể, lợi ích xã hội"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật biện chứng, ý thức có thể làm biến đổi hoàn cảnh vật chất vì:", options: [
+        "Vì ý thức chỉ đạo hoạt động thực tiễn của con người",
+        "Vì ý thức là lực lượng vật chất",
+        "Vì ý thức là vật chất",
+        "Vì ý thức tồn tại độc lập với vật chất"
+      ], answer: [0] },
+      { text: "Theo quan điểm duy vật biện chứng, ý thức thường thay đổi chậm hơn so với sự biến đổi của thế giới vật chất vì:", options: [
+        "Vì ý thức không có tính ổn định",
+        "Vì ý thức có tính độc lập tương đối, có đời sống riêng",
+        "Vì con người không muốn thay đổi ý thức",
+        "Vì vật chất không quyết định ý thức"
+      ], answer: [1] },
+      { text: "Theo quan điểm duy vật biện chứng, ý thức tác động trở lại vật chất có nghĩa là:", options: [
+        "Ý thức có thể làm biến đổi những điều kiện, hoàn cảnh vật chất thông qua hoạt động thực tiễn",
+        "Ý thức quyết định vật chất",
+        "Ý thức và vật chất không liên quan đến nhau",
+        "Ý thức tạo ra vật chất"
+      ], answer: [0] },
+      { text: "Tại sao xã hội càng phát triển thì vai trò của ý thức ngày càng to lớn?", options: [
+        "Vì trong thời đại thông tin, kinh tế tri thức, tri thức khoa học đã trở thành lực lượng sản xuất trực tiếp",
+        "Vì trình độ giáo dục ngày càng cao",
+        "Vì con người ngày càng thông minh hơn",
+        "Vì con người ngày càng ít phụ thuộc vào tự nhiên"
+      ], answer: [0] },
+      { text: "Khía cạnh nào dưới đây không thuộc vai trò quyết định của vật chất đối với ý thức?", options: [
+        "Vật chất quyết định màu sắc của ý thức",
+        "Vật chất quyết định nội dung của ý thức",
+        "Vật chất quyết định sự vận động, phát triển của ý thức",
+        "Vật chất quyết định nguồn gốc của ý thức"
+      ], answer: [0] },
+      { text: "Khẳng định \"vật chất sinh ra, cho nên lẽ tất nhiên, ý thức - một thuộc tính của bộ phận con người - cũng do giới tự nhiên, vật chất sinh ra\" thể hiện vai trò quyết định của vật chất ở khía cạnh nào?", options: [
+        "Vật chất quyết định nguồn gốc của ý thức",
+        "Vật chất quyết định bản chất của ý thức",
+        "Vật chất quyết định sự vận động, phát triển của ý thức",
+        "Vật chất quyết định nội dung của ý thức"
+      ], answer: [0] },
+      { text: "Theo quan điểm triết học Mác - Lênin, mối quan hệ giữa vật chất và ý thức là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vật chất và ý thức tồn tại song song",
+        "Ý thức có tính độc lập tương đối, tác động tích cực trở lại vật chất",
+        "Vật chất quyết định ý thức",
+        "Ý thức quyết định vật chất"
+      ], answer: [1, 2], multi: true },
+      { text: "Vận dụng mối quan hệ giữa vật chất và ý thức theo quan điểm của triết học Mác - Lênin, muốn đạt hiệu quả trong hoạt động thực tiễn, cần: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Hành động theo ý chí chủ quan",
+        "Phát huy tính năng động, sáng tạo của con người thông qua hoạt động thực tiễn",
+        "Dựa vào niềm tin tôn giáo",
+        "Xuất phát từ thực tế khách quan"
+      ], answer: [1, 3], multi: true },
+      { text: "Theo triết học Mác - Lênin, ý thức là sự phản ánh thế giới vật chất vào trong đầu óc con người là:", options: [
+        "Phản ánh máy móc như \"soi gương\"",
+        "Chỉ ghi nhận những gì đang tồn tại",
+        "Bắt chước hoàn toàn hiện thực",
+        "Phản ánh có chọn lọc, phân tích, tổng hợp và dự báo"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật biện chứng, việc con người tạo ra \"thiên nhiên thứ hai\" là nhờ:", options: [
+        "Di sản văn hóa dân tộc",
+        "Sự phát triển của khoa học tự nhiên",
+        "Các hiện tượng siêu nhiên",
+        "Ý thức và hoạt động thực tiễn của con người"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật biện chứng, điều gì xảy ra khi ý thức phản ánh đúng hiện thực?", options: [
+        "Góp phần cải tạo hiện thực",
+        "Gây tổn thất cho thực tiễn",
+        "Làm chậm tiến bộ xã hội",
+        "Làm sai lệch hiện thực"
+      ], answer: [0] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, tính độc lập tương đối của ý thức có nghĩa là:", options: [
+        "Ý thức có đời sống riêng, có quy luật vận động riêng, không lệ thuộc máy móc vào vật chất",
+        "Ý thức luôn phản ánh chính xác vật chất",
+        "Ý thức hoàn toàn độc lập với vật chất",
+        "Ý thức không thể tác động trở lại vật chất"
+      ], answer: [0] },
+      { text: "Ý thức quyết định thành công hay thất bại của hoạt động con người như thế nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Ý thức không ảnh hưởng đến kết quả hoạt động",
+        "Ý thức đúng sẽ dẫn đến thành công, ý thức sai sẽ dẫn đến thất bại",
+        "Khi phản ánh đúng hiện thực, ý thức có thể dự báo, tiên đoán một cách chính xác cho hiện thực",
+        "Ý thức luôn dẫn đến thành công"
+      ], answer: [1, 2], multi: true },
+      { text: "Từ mối quan hệ giữa vật chất và ý thức, hãy chọn 2 đáp án trả lời đúng cho nội dung đoạn thơ sau:\n\n\"Không gian được trí óc\nĐể quốc tù ta, ta chẳng tù\nTa còn bộ óc, ta không lo\nGiam người khóa cả chân tay lại\nChẳng thể ngăn ta nghĩ tự do\"\n\n(Không gian được trí óc - Xuân Thủy)\n(Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vai trò của vật chất với ý thức",
+        "Vật chất quyết định màu sắc của ý thức",
+        "Vật chất quyết định nội dung của ý thức",
+        "Ý thức có tính độc lập tương đối, tác động trở lại vật chất"
+      ], answer: [0, 3], multi: true },
+      { text: "Theo triết học Mác - Lênin, nguyên tắc phương pháp luận rút ra từ mối quan hệ giữa vật chất và ý thức là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Tôn trọng tính khách quan",
+        "Tách biệt giữa tính khách quan và tính chủ quan",
+        "Phát huy tính năng động chủ quan",
+        "Tôn trọng tính khách quan là chính"
+      ], answer: [0, 2], multi: true },
+      { text: "Khẳng định \"Vật chất thay đổi thì sớm hay muộn, ý thức cũng phải thay đổi theo\" là nội dung:", options: [
+        "Vật chất quyết định màu sắc của ý thức",
+        "Vật chất quyết định nội dung của ý thức",
+        "Vật chất quyết định sự vận động, phát triển của ý thức",
+        "Vật chất quyết định nguồn gốc của ý thức"
+      ], answer: [2] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, vai trò của bộ óc con người trong mối quan hệ giữa vật chất và ý thức là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Ý thức tồn tại phụ thuộc vào hoạt động thần kinh của bộ não trong quá trình phản ánh hiện thực khách quan",
+        "Là ý thức tinh thần sinh ra thế giới vật chất",
+        "Không liên quan đến ý thức, ý thức của con người đã bị trừu tượng hóa",
+        "Là một dạng vật chất có tổ chức cao nhất, là cơ quan phản ánh để hình thành ý thức"
+      ], answer: [0, 3], multi: true },
+      { text: "Nguyên tắc phương pháp luận \"tôn trọng tính khách quan kết hợp phát huy tính năng động chủ quan\" có ý nghĩa gì? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Phát huy tính năng động chủ quan",
+        "Tôn trọng tính khách quan",
+        "Chỉ cần phát huy tính năng động chủ quan",
+        "Chỉ cần xuất phát từ hiện thực khách quan"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, vật chất quyết định nguồn gốc của ý thức vì:", options: [
+        "Ý thức có trước vật chất",
+        "Ý thức là sản phẩm của vật chất",
+        "Vật chất là thuộc tính của ý thức",
+        "Sự vận động của thế giới vật chất là yếu tố quyết định sự ra đời của cái vật chất"
+      ], answer: [3] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, tính độc lập tương đối của ý thức thể hiện rõ nhất ở điểm nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Được sinh ra trực tiếp từ vật chất",
+        "Luôn sát với hiện thực",
+        "Có quy luật vận động riêng, không lệ thuộc một cách máy móc vào vật chất",
+        "Có tính độc lập tương đối, tác động trở lại thế giới vật chất"
+      ], answer: [2, 3], multi: true },
+      { text: "Chỉ ra các phát biểu nào đúng, phát biểu nào sai:", type: "truth", rows: [
+        ["Ý thức có thể tồn tại mà không cần có sự phản ánh hiện thực khách quan thông qua bộ não.", "Sai"],
+        ["Ý thức là thuộc tính của con người nhưng hoàn toàn tách rời khỏi thế giới vật chất và không bị chi phối bởi nó.", "Sai"],
+        ["Ý thức - một thuộc tính của bộ phận con người - cũng do giới tự nhiên, vật chất sinh ra.", "Đúng"],
+        ["Con người là kết quả của quá trình tiến hóa tự nhiên, do giới tự nhiên sinh ra nên ý thức cũng do vật chất sinh ra.", "Đúng"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Kéo thả các nội dung dưới đây vào ô tương ứng:", type: "match", rows: [
+        ["Dân gian có câu: \"Ngọc kia chuốt mãi cũng tròn/Sắt kia mài mãi cũng nên kim\", theo quan điểm duy vật biện chứng, đó là nội dung:", "Ý thức có tính độc lập tương đối, tác động trở lại vật chất"],
+        ["Dân gian có câu: \"Có thực mới vực được đạo\", theo quan điểm duy vật biện chứng, đó là nội dung:", "Vai trò của vật chất với ý thức"]
+      ], choices: [
+        "Ý thức có tính độc lập tương đối, tác động trở lại vật chất",
+        "Vai trò của vật chất với ý thức"
+      ] },
+      { text: "Kéo thả các nội dung khớp với các nội dung từ 1 - 4 trải dưới đây:", type: "match", rows: [
+        ["Quan điểm nào coi ý thức, tinh thần vốn của con người đã bị trừu tượng hóa, tách khỏi con người hiện thực thành một lực lượng thần bí?", "Chủ nghĩa duy tâm khách quan"],
+        ["Quan điểm nào tuyệt đối hoá yếu tố vật chất, chỉ nhấn mạnh một chiều vai trò của vật chất sinh ra ý thức?", "Chủ nghĩa duy vật siêu hình"],
+        ["Quan điểm nào cho rằng ý thức có tính độc lập tương đối và tác động trở lại vật chất?", "Chủ nghĩa duy vật biện chứng"],
+        ["Quan điểm nào phủ nhận tính khách quan, cường điệu vai trò của nhân tố chủ quan, duy ý chí?", "Chủ nghĩa duy tâm chủ quan"]
+      ], choices: [
+        "Chủ nghĩa duy tâm khách quan",
+        "Chủ nghĩa duy vật siêu hình",
+        "Chủ nghĩa duy vật biện chứng",
+        "Chủ nghĩa duy tâm chủ quan"
+      ] },
+      { text: "Kéo thả các nội dung liệt kê dưới đây vào các cột tương ứng:", type: "match", rows: [
+        ["1) Theo quan điểm của chủ nghĩa duy vật biện chứng, ý thức có tính độc lập tương đối và tác động trở lại vật chất là:", "Ý thức là sự phản ánh thế giới vật chất vào trong đầu óc con người"],
+        ["2) Theo quan điểm của chủ nghĩa duy vật biện chứng, mối quan hệ giữa vật chất và ý thức là:", "Vật chất quyết định ý thức, còn ý thức tác động tích cực trở lại vật chất"]
+      ], choices: [
+        "Ý thức là sự phản ánh thế giới vật chất vào trong đầu óc con người",
+        "Vật chất quyết định ý thức, còn ý thức tác động tích cực trở lại vật chất"
+      ] }
+    ];
+
+    const lesson4Questions = [
+      { text: "Điền cụm từ thích hợp vào chỗ trống để hoàn chỉnh khái niệm 'liên hệ' trong triết học: \"Liên hệ là phạm trù triết học chỉ ..... giữa các sự vật, hiện tượng hay giữa các mặt của một hiện tượng trong thế giới.\" (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Sự di chuyển", "Sự quy định", "Sự ràng buộc", "Sự tác động qua lại, sự chuyển hoá lẫn nhau"
+      ], answer: [1, 2], multi: true },
+      { text: "Trong những luận điểm sau, đâu là định nghĩa về sự phát triển theo quan điểm của chủ nghĩa duy vật biện chứng?", options: [
+        "Phát triển là phạm trù chỉ quá trình vận động tiến lên từ thấp đến cao, từ đơn giản đến phức tạp, từ kém hoàn thiện đến hoàn thiện hơn của các sự vật",
+        "Phát triển là phạm trù chỉ sự liên hệ giữa các sự vật",
+        "Phát triển là phạm trù chỉ sự vận động của các sự vật",
+        "Nguyện vọng, ý chí của con người tự nó tác động đến sự phát triển"
+      ], answer: [0] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, sự phát triển có những đặc điểm: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Phát triển bao hàm cả trong nó những quanh co phức tạp nhất định",
+        "Diễn ra theo đường xoáy ốc",
+        "Chỉ là sự tăng, giảm về lượng",
+        "Phát triển chỉ là tăng, giảm đơn thuần về mặt lượng, mà không có sự biến đổi về chất"
+      ], answer: [0, 1], multi: true },
+      { text: "Quan điểm nào đánh tráo các mối liên hệ cơ bản thành không cơ bản hoặc ngược lại?", options: [
+        "Phép duy tâm", "Chủ nghĩa thực dụng", "Thuật ngụy biện", "Trường phái vô thần"
+      ], answer: [2] },
+      { text: "Nguyên lý phát triển đòi hỏi khi xem xét sự vật phải: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Xem xét sự vật trong trạng thái động",
+        "Xem xét sự vật tách rời mối liên hệ với các sự vật khác",
+        "Tìm ra xu hướng vận động biến đổi chuyển hóa của sự vật",
+        "Phủ nhận sự ra đời của cái mới"
+      ], answer: [0, 2], multi: true },
+      { text: "Vận dụng quan điểm toàn diện và quan điểm phát triển trong việc đánh giá thành công của một người, chúng ta nên: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Bỏ qua yếu tố may mắn và hoàn cảnh xã hội",
+        "Xem xét sự phát triển của người đó qua các giai đoạn khác nhau của cuộc đời",
+        "Đánh giá người đó trong mối quan hệ với nhiều khía cạnh của cuộc sống",
+        "Nhìn vào thành tích hiện tại"
+      ], answer: [1, 2], multi: true },
+      { text: "Luận điểm sau đây thuộc trường phái triết học nào: \"Mối liên hệ nhân quả là do cảm giác con người quy định\"?", options: [
+        "Chủ nghĩa duy vật biện chứng", "Chủ nghĩa duy tâm khách quan",
+        "Chủ nghĩa duy vật siêu hình", "Chủ nghĩa duy tâm chủ quan"
+      ], answer: [3] },
+      { text: "Luận điểm sau đây là của trường phái triết học nào: Mối liên hệ nhân quả tồn tại khách quan phổ biến và tất yếu trong thế giới vật chất.", options: [
+        "Chủ nghĩa duy vật siêu hình", "Chủ nghĩa duy tâm chủ quan",
+        "Chủ nghĩa duy tâm khách quan", "Chủ nghĩa duy vật biện chứng"
+      ], answer: [3] },
+      { text: "Điền cụm từ thích hợp vào chỗ trống của câu sau để được khái niệm ngẫu nhiên: \"Ngẫu nhiên là phạm trù triết học dùng để chỉ (1)....., do nguyên nhân, (2)..... quy định nên có thể xuất hiện, có thể không xuất hiện; có thể xuất hiện thế này hoặc có thể xuất hiện thế khác\".", options: [
+        "1- nguyên nhân, 2- hoàn cảnh bên ngoài",
+        "1- Mối liên hệ không bản chất, 2- Hoàn cảnh bên ngoài",
+        "1- mối liên hệ bên ngoài, 2- mối liên hệ ngẫu nhiên",
+        "1- mối liên hệ bên ngoài, 2- mối liên hệ bên trong"
+      ], answer: [1] },
+      { text: "Việc áp dụng máy móc các nguyên tắc chung vào mọi hoàn cảnh cụ thể mà không xét đến đặc điểm riêng của từng trường hợp sẽ dẫn đến sai lầm nào sau đây?", options: [
+        "Bệnh thành tích", "Bệnh hình thức", "Bệnh giáo điều", "Bệnh kinh nghiệm"
+      ], answer: [2] },
+      { text: "Luận điểm sau đây về nguồn gốc của sự phát triển thuộc trường phái triết học nào: \"Mâu thuẫn tồn tại khách quan trong chính sự vật quy định sự phát triển của sự vật\".", options: [
+        "Chủ nghĩa duy vật biện chứng", "Chủ nghĩa duy tâm chủ quan",
+        "Chủ nghĩa duy tâm khách quan", "Chủ nghĩa duy vật siêu hình"
+      ], answer: [0] },
+      { text: "Theo quan điểm duy vật biện chứng, tính khách quan của sự phát triển được thể hiện ở: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Sự phát triển do lực lượng siêu nhiên quyết định",
+        "Sự phát triển là do sự thay đổi về lượng của sự vật gây nên",
+        "Nguồn gốc phát triển nằm ngay trong bản thân sự vật",
+        "Sự phát triển không phụ thuộc vào ý thức con người"
+      ], answer: [2, 3], multi: true },
+      { text: "Khi vận dụng quan điểm toàn diện và quan điểm phát triển để giải quyết khó khăn, chúng ta cần: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Bình tĩnh xem xét mọi nhân tố tác động",
+        "Chỉ tập trung vào một khía cạnh của vấn đề",
+        "Bỏ qua các yếu tố không quan trọng",
+        "Tìm kiếm hướng giải quyết hợp lý"
+      ], answer: [0, 3], multi: true },
+      { text: "Luận điểm sau đây thuộc lập trường triết học nào: Tất nhiên và ngẫu nhiên tồn tại khách quan nhưng tách rời nhau, không có liên quan gì với nhau.", options: [
+        "Chủ nghĩa duy vật siêu hình", "Chủ nghĩa duy tâm khách quan",
+        "Chủ nghĩa duy vật biện chứng", "Chủ nghĩa duy tâm chủ quan"
+      ], answer: [0] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, luận điểm nào sau đây là đúng?", options: [
+        "Những hiện tượng nhận thức được nguyên nhân đều trở thành cái tất yếu.",
+        "Chỉ có cái tất yếu mới có nguyên nhân.",
+        "Những hiện tượng chưa nhận thức được nguyên nhân là cái ngẫu nhiên.",
+        "Ngẫu nhiên và tất nhiên đều có nguyên nhân"
+      ], answer: [3] },
+      { text: "Trong xã hội, yếu tố nào đóng vai trò quan trọng trong việc biến khả năng thành hiện thực?", options: [
+        "Các quy luật tự nhiên", "Điều kiện tự nhiên",
+        "Hoạt động có ý thức của con người", "Yếu tố khách quan"
+      ], answer: [2] },
+      { text: "Một hình thức có thể chứa đựng nhiều nội dung khác nhau. Điều này thể hiện:", options: [
+        "Mối quan hệ biện chứng giữa nội dung và hình thức",
+        "Tính độc lập tuyệt đối giữa nội dung và hình thức",
+        "Sự thống nhất hoàn toàn giữa nội dung và hình thức",
+        "Mối quan hệ bất biến giữa nội dung và hình thức"
+      ], answer: [0] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, mối liên hệ là gì? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Là chỉ sự ảnh hưởng qua lại của các yếu tố, bộ phận trong sự vật và giữa các sự vật, hiện tượng",
+        "Là sự thừa nhận rằng các mặt của sự vật, hiện tượng và giữa các sự vật với nhau trong thực tế khách quan không có mối liên hệ nào cả",
+        "Là sự tác động lẫn nhau, chi phối, chuyển hoá lẫn nhau một cách khách quan, phổ biến, nhiều vẻ giữa các mặt, quá trình của sự vật, hiện tượng hoặc giữa các sự vật, hiện tượng",
+        "Là sự tác động lẫn nhau, có tính khách quan, phổ biến, nhiều vẻ, không thể chuyển hoá cho nhau"
+      ], answer: [0, 2], multi: true },
+      { text: "Nguyên lý cơ bản của phép biện chứng duy vật là nguyên lý nào?", options: [
+        "Nguyên lý về sự vận động và đứng im của các sự vật",
+        "Nguyên lý về sự tồn tại khách quan của vật chất",
+        "Nguyên lý về tính liên tục và tính gián đoạn của thế giới vật chất",
+        "Nguyên lý về mối liên hệ phổ biến và về sự phát triển"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật biện chứng, đối với sự vận động và phát triển của sự vật, các mối liên hệ: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Đều có vai trò như nhau", "Không thể thay đổi",
+        "Có thể chuyển hoá lẫn nhau", "Có vai trò và vị trí khác nhau"
+      ], answer: [2, 3], multi: true },
+      { text: "Theo quan điểm duy vật biện chứng, nguồn gốc của sự phát triển là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Nguồn gốc phát triển nằm ngay trong bản thân sự vật",
+        "Ý thức con người",
+        "Sự đấu tranh của các mặt đối lập trong bản thân sự vật",
+        "Lực lượng siêu nhiên"
+      ], answer: [0, 2], multi: true },
+      { text: "Đâu là quan điểm của chủ nghĩa duy vật biện chứng về mối quan hệ giữa cái chung và cái riêng?", options: [
+        "Cái chung tồn tại khách quan, bên ngoài cái riêng",
+        "Không có cái chung thuần tuý tồn tại ngoài cái riêng, cái chung tồn tại thông qua cái riêng",
+        "Cái riêng không bao chứa cái chung nào",
+        "Cái riêng tồn tại khách quan không bao chứa cái chung"
+      ], answer: [1] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, vì sao khi cải tạo sự vật, ta cần căn cứ vào bản chất?", options: [
+        "Vì bản chất là yếu tố bề ngoài", "Vì bản chất quy định sự phát triển của sự vật",
+        "Vì bản chất dễ thay đổi", "Vì bản chất không quan trọng bằng hiện tượng"
+      ], answer: [1] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, trong quan hệ biện chứng giữa nội dung và hình thức, yếu tố nào giữ vai trò quyết định?", options: [
+        "Phương pháp", "Hình thức", "Điều kiện", "Nội dung"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật biện chứng, vận dụng trong nhận thức và hoạt động thực tiễn phải dựa vào cái chung vì: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vì cái chung dễ hiểu và dễ áp dụng hơn cái riêng",
+        "Vì cái chung là bản chất, sâu sắc, chi phối cái riêng",
+        "Vì cái chung mang tính khách quan",
+        "Vì cái chung luôn đúng trong mọi hoàn cảnh"
+      ], answer: [1, 2], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, trong quan hệ biện chứng giữa khả năng và hiện thực là:", options: [
+        "Không thể chuyển hóa cho nhau trong quá trình phát triển của sự vật",
+        "Chỉ có khả năng mới biến thành hiện thực",
+        "Chỉ có hiện thực mới biến thành khả năng",
+        "Có thể chuyển hóa cho nhau trong quá trình phát triển của sự vật"
+      ], answer: [3] },
+      { text: "Thêm cụm từ nào vào chỗ trống của câu sau để được một luận điểm của chủ nghĩa duy vật biện chứng: \"Quan hệ giữa phạm trù triết học và phạm trù của các khoa học cụ thể là quan hệ giữa .....(1)..... và .....(2).....\"", options: [
+        "1- cái riêng, 2- cái chung", "1- cái chung, 2- cái riêng",
+        "1- cái chung, 2- cái chung", "1- cái riêng, 2- cái riêng"
+      ], answer: [1] },
+      { text: "Chỉ ra các luận điểm đúng, luận điểm nào sai:", type: "truth", rows: [
+        ["1) Một nguyên nhân có thể gây ra nhiều kết quả khác nhau tùy thuộc vào hoàn cảnh cụ thể", "Đúng"],
+        ["2) Nguyên nhân giống nhau trong những điều kiện giống nhau thì kết quả về cơ bản giống nhau", "Đúng"],
+        ["3) Một kết quả chỉ có thể được gây nên do các nguyên nhân khác nhau", "Sai"],
+        ["4) Một nguyên nhân nhất định trong những điều kiện hoàn cảnh nhất định chỉ có thể gây ra kết quả nhất định", "Đúng"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Chỉ ra các phát biểu đúng, phát biểu nào sai:", type: "truth", rows: [
+        ["1) Chủ nghĩa duy tâm khách quan cho rằng con người có thể tự mình xây dựng nên mối liên hệ giữa các sự vật hiện tượng thông qua kinh nghiệm cảm tính", "Sai"],
+        ["2) Chủ nghĩa duy tâm khách quan cho rằng mối liên hệ giữa các sự vật, hiện tượng trong thế giới là biểu hiện của mối liên hệ giữa các ý niệm.", "Đúng"],
+        ["3) Chủ nghĩa duy tâm khách quan cho rằng các mối liên hệ giữa sự vật, hiện tượng là kết quả của quá trình vận động và phát triển nội tại của chính bản thân chúng", "Sai"],
+        ["4) Chủ nghĩa duy tâm khách quan cho rằng các sự vật, hiện tượng không có mối liên hệ với nhau, mà tồn tại một cách độc lập, biệt lập", "Sai"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Chỉ ra các phát biểu đúng, phát biểu nào sai:", type: "truth", rows: [
+        ["1) Chủ nghĩa duy vật biện chứng khẳng định mọi sự vật đều tồn tại trong mối liên hệ với các sự vật khác", "Đúng"],
+        ["2) Chủ nghĩa duy vật biện chứng khẳng định chỉ có một số sự vật nhất định mới tồn tại trong mối liên hệ với nhau, còn lại là độc lập", "Sai"],
+        ["3) Chủ nghĩa duy vật biện chứng khẳng định mối liên hệ giữa các sự vật là kết quả của sự tác động qua lại và chuyển hóa lẫn nhau", "Đúng"],
+        ["4) Chủ nghĩa duy vật biện chứng khẳng định nguồn gốc mối liên hệ giữa các sự vật và hiện tượng là do tính thống nhất vật chất của thế giới", "Đúng"]
+      ], choices: ["Đúng", "Sai"] }
+    ];
+
+    const lesson5Questions = [
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, luận điểm nào sau đây là sai?", options: [
+        "Chất là tính quy định vốn có của sự vật",
+        "Chất tồn tại khách quan gắn liền với sự vật",
+        "Chất tồn tại khách quan bên ngoài sự vật",
+        "Không có chất thuần tuý bên ngoài sự vật"
+      ], answer: [2] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, luận điểm nào sau đây là đúng?", options: [
+        "Chất không có tác động gì đến sự thay đổi của lượng",
+        "Không phải sự biến đổi về chất nào cũng là kết quả của sự biến đổi về lượng",
+        "Phát triển của sự vật chỉ bao hàm sự thay đổi về chất",
+        "Sự biến đổi về chất là kết quả của sự biến đổi về lượng của sự vật"
+      ], answer: [3] },
+      { text: "Câu ca dao: \" Một cây làm chẳng nên non; Ba cây chụm lại nên hòn núi cao \" thể hiện nội dung quy luật nào của phép biện chứng duy vật?", options: [
+        "Quy luật phủ định của phủ định",
+        "Quy luật chất - lượng",
+        "Quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại",
+        "Quy luật mâu thuẫn"
+      ], answer: [2] },
+      { text: "Từ nội dung quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại, vận dụng trong hoạt động thực tiễn, cần tránh tư tưởng nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Tích cực, chủ động trong việc tạo ra bước nhảy",
+        "Linh hoạt trong việc lựa chọn thời điểm thay đổi",
+        "Bảo thủ, không dám thực hiện bước nhảy dù lượng đã đủ",
+        "Nóng nảy, muốn thay đổi chất ngay lập tức dù lượng chưa đủ"
+      ], answer: [2, 3], multi: true },
+      { text: "Nội dung quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại thể hiện:", options: [
+        "Sự thay đổi về chất diễn ra trước sự thay đổi về lượng",
+        "Mọi đối tượng đều là sự thống nhất của hai mặt đối lập chất và lượng",
+        "Chất mới ra sẽ không tiếp tục tác động trở lại duy trì sự thay đổi của lượng",
+        "Chất quyết định lượng một cách tuyệt đối"
+      ], answer: [1] },
+      { text: "Lênin nói quy luật mâu thuẫn có vị trí như thế nào trong phép biện chứng duy vật?", options: [
+        "Vạch ra xu hướng của sự phát triển",
+        "Là hạt nhân của phép biện chứng duy vật, vạch ra nguồn gốc bên trong của sự vận động và phát triển",
+        "Vạch ra phương thức của sự phát triển",
+        "Vạch ra cách thức của sự phát triển"
+      ], answer: [1] },
+      { text: "Theo quan điểm duy vật biện chứng, nguyên tắc giải quyết mâu thuẫn bằng: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Áp đặt giải pháp chủ quan", "Bỏ qua điều kiện khách quan",
+        "Không điều hòa mâu thuẫn", "Đấu tranh giữa các mặt đối lập"
+      ], answer: [2, 3], multi: true },
+      { text: "Thống nhất giữa các mặt đối lập là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Các mặt đối lập tác động ngang nhau",
+        "Sự tác động qua lại theo hướng bài trừ, phủ định lẫn nhau",
+        "Sự phát triển diễn ra không ngừng của sự vật, hiện tượng",
+        "Các mặt đối lập cần đến nhau, nương tựa vào nhau, làm tiền đề cho nhau tồn tại"
+      ], answer: [0, 3], multi: true },
+      { text: "Theo quy luật thống nhất và đấu tranh của các mặt đối lập, phát triển diễn ra như thế nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Các mặt đối lập luôn loại trừ nhau, không thể cùng tồn tại trong một sự vật",
+        "Phát triển chỉ xảy ra khi loại bỏ hoàn toàn một mặt đối lập",
+        "Phát triển là kết quả của sự đấu tranh và chuyển hóa giữa các mặt đối lập",
+        "Thống nhất và đấu tranh giữa các mặt đối lập là nguồn gốc vận động và phát triển của sự vật"
+      ], answer: [2, 3], multi: true },
+      { text: "Trong xã hội hữu nô lệ, mâu thuẫn giữa giai cấp thống trị ( giai cấp chủ nô ) và giai cấp bị trị ( giai cấp nô lệ ) là biểu hiện của quy luật nào?", options: [
+        "Quy luật lượng - chất",
+        "Quy luật thống nhất và đấu tranh giữa các mặt đối lập",
+        "Quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại",
+        "Quy luật phủ định của phủ định"
+      ], answer: [1] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, trong phủ định biện chứng, cái mới ra đời như thế nào so với cái cũ?", options: [
+        "Hoàn toàn khác biệt, không liên quan", "Luôn kém tiến bộ hơn",
+        "Giống hệt cái cũ", "Có kế thừa và cải tạo những yếu tố tích cực"
+      ], answer: [3] },
+      { text: "Sự phát triển của xã hội loài người diễn ra bởi sự thay thế lẫn nhau của các hình thái kinh tế - xã hội từ thấp đến cao. Sự thay thế ấy là biểu hiện của quá trình:", options: [
+        "Nhân quả", "Thống nhất và đấu tranh của các mặt đối lập",
+        "Phủ định của phủ định", "Lượng đổi dẫn đến chất đổi"
+      ], answer: [2] },
+      { text: "Từ nội dung quy luật thống nhất và đấu tranh của các mặt đối lập, không nên nóng vội hoặc bảo thủ trong giải quyết mâu thuẫn vì:", options: [
+        "Vì giải quyết mâu thuẫn phải căn cứ vào điều kiện chín muồi",
+        "Vì mâu thuẫn không quan trọng", "Vì mâu thuẫn là hiện tượng tạm thời",
+        "Vì mâu thuẫn luôn tồn tại mãi mãi"
+      ], answer: [0] },
+      { text: "Quy luật phủ định của phủ định phản ánh đặc điểm nào của sự phát triển?", options: [
+        "Sự thay đổi không kế thừa từ cái cũ",
+        "Sự phát triển đi lên theo hình xoáy ốc",
+        "Sự phát triển diễn ra một cách ngẫu nhiên",
+        "Sự vận động theo chu kỳ khép kín"
+      ], answer: [1] },
+      { text: "Quá trình xây dựng chủ nghĩa xã hội \" bỏ qua chế độ tư bản chủ nghĩa \" ở Việt Nam trên cơ sở vận dụng nội dung quy luật phủ định của phủ định được hiểu như thế nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Phủ định hoàn toàn hình thái kinh tế - xã hội tư bản chủ nghĩa",
+        "Phủ định chủ nghĩa tư bản là yêu cầu của thực tiễn Việt Nam",
+        "Phủ định chủ nghĩa tư bản bằng tư duy siêu hình",
+        "Phủ định chủ nghĩa tư bản là quá trình khó khăn, phức tạp"
+      ], answer: [1, 3], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, luận điểm nào sau đây là sai?", options: [
+        "Mỗi sự vật có nhiều thuộc tính",
+        "Thuộc tính của sự vật không phải là cái vốn có của sự vật",
+        "Thuộc tính của sự vật bộc lộ thông qua sự tác động giữa các sự vật",
+        "Thuộc tính của sự vật là những đặc tính vốn có của sự vật"
+      ], answer: [1] },
+      { text: "Ý nghĩa phương pháp luận của quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại, thể hiện ở: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Thực hiện bước nhảy không cần điều kiện chín muồi",
+        "Không cần chú ý đến điều kiện khách quan khi thực hiện bước nhảy",
+        "Phải biết tích luỹ về lượng để có biến đổi về chất",
+        "Cần xác định quy mô và nhịp điệu bước nhảy một cách khách quan, khoa học"
+      ], answer: [2, 3], multi: true },
+      { text: "Mâu thuẫn biện chứng là khái niệm dùng để chỉ: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Sự liên hệ, tác động theo cách vừa thống nhất, vừa đấu tranh giữa các mặt đối lập",
+        "Sự đối lập hoàn toàn giữa các sự vật, hiện tượng",
+        "Sự tác động theo cách vừa đối hồi, vừa loại trừ, vừa chuyển hoá lẫn nhau giữa các mặt đối lập",
+        "Sự thay đổi về chất của sự vật, hiện tượng"
+      ], answer: [0, 2], multi: true },
+      { text: "Theo quan điểm duy vật biện chứng, sự phát triển của sự vật, hiện tượng là kết quả của yếu tố nào?", options: [
+        "Sự đồng nhất hoàn toàn giữa các mặt đối lập",
+        "Sự ổn định tuyệt đối của sự vật",
+        "Sự đấu tranh giữa các mặt đối lập",
+        "Sự loại bỏ tất cả các mâu thuẫn"
+      ], answer: [2] },
+      { text: "Từ nội dung quy luật phủ định của phủ định, đặc điểm nào sau đây không phải của phủ định biện chứng? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Làm tiền đề cho sự phát triển tiếp theo",
+        "Tạo ra kết quả cuối cùng trong quá trình vận động",
+        "Phủ định sạch trơn, không kế thừa",
+        "Có kế thừa những yếu tố tích cực"
+      ], answer: [1, 2], multi: true },
+      { text: "Vị trí của quy luật phủ định của phủ định trong phép biện chứng duy vật? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Chỉ ra khuynh hướng của sự phát triển",
+        "Chỉ ra hình thức của sự phát triển",
+        "Chỉ ra nguồn gốc của sự phát triển",
+        "Chỉ ra cách thức của sự phát triển"
+      ], answer: [0, 1], multi: true },
+      { text: "Từ nội dung quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại, bước nhảy là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Là giai đoạn chuyển hoá cơ bản về chất do sự thay đổi về lượng trước đó gây ra",
+        "Là bước ngoặt trong quá trình vận động, chấm dứt giai đoạn thay đổi về lượng",
+        "Là sự thay đổi liên tục không gián đoạn trong quá trình phát triển",
+        "Là sự tích luỹ nhỏ nhặt về lượng không dẫn đến thay đổi lớn"
+      ], answer: [0, 1], multi: true },
+      { text: "Luận điểm nào sau đây là sai?", options: [
+        "Hai mặt đối lập biện chứng của sự vật liên hệ với nhau tạo thành mâu thuẫn biện chứng",
+        "Không phải ghép bất kỳ hai mặt đối lập lại với nhau là được mâu thuẫn biện chứng",
+        "Các mặt đối lập liên hệ, tác động qua lại với nhau một cách khách quan",
+        "Ghép hai mặt đối lập lại với nhau là được mâu thuẫn biện chứng"
+      ], answer: [3] },
+      { text: "Từ nội dung quy luật phủ định của phủ định, kế thừa biện chứng khác với kế thừa siêu hình ở chỗ nào? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Giữ lại yếu tố tích cực của cái cũ",
+        "Bổ sung yếu tố hợp lý trong cái mới",
+        "Giữ nguyên mọi thứ như cái cũ",
+        "Loại bỏ hoàn toàn cái cũ"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm duy vật biện chứng, mâu thuẫn biện chứng tồn tại khách quan vì: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Vì nó xuất hiện trong mọi lĩnh vực tự nhiên, xã hội và tư duy",
+        "Vì nó nằm trong bản thân sự vật, không phụ thuộc ý muốn con người",
+        "Vì nó được con người tạo ra để giải thích hiện tượng",
+        "Vì nó chỉ tồn tại trong các hiện tượng xã hội phức tạp"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, nguồn gốc của sự phát triển là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Nguồn gốc phát triển nằm ngay trong bản thân sự vật",
+        "Sự đấu tranh của các mặt đối lập trong bản thân sự vật",
+        "Lực lượng siêu nhiên", "Ý thức con người"
+      ], answer: [0, 1], multi: true },
+      { text: "Trong hoạt động thực tiễn, sai lầm của sự chủ quan, nóng vội là do không tôn trọng quy luật nào?", options: [
+        "Quy luật chất - lượng", "Quy luật phủ định của phủ định",
+        "Quy luật mâu thuẫn",
+        "Quy luật chuyển hoá từ những sự thay đổi về lượng dẫn đến sự thay đổi về chất và ngược lại"
+      ], answer: [3] },
+      { text: "Yếu tố tạo thành mâu thuẫn biện chứng là: (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Các mặt đối lập có khuynh hướng biến đổi trái ngược nhau",
+        "Sự thống nhất tuyệt đối giữa các mặt đối lập",
+        "Các bộ phận, thuộc tính cùng tồn tại khách quan trong mỗi sự vật, hiện tượng",
+        "Các yếu tố độc lập không liên quan đến nhau"
+      ], answer: [0, 2], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, mỗi lần phủ định diễn ra gắn liền với yếu tố nào?", options: [
+        "Sự đồng thuận tuyệt đối", "Sự đấu tranh giữa các mặt đối lập",
+        "Sự giữ nguyên trạng thái cũ", "Sự loại bỏ tất cả yếu tố cũ"
+      ], answer: [1] },
+      { text: "Sự tác động theo xu hướng nào thì được gọi là sự đấu tranh của các mặt đối lập?", options: [
+        "Nương tựa nhau", "Đấu tranh với nhau", "Ràng buộc nhau", "Phủ định, bài trừ nhau"
+      ], answer: [3] }
+    ];
+
+    const lesson6Questions = [
+      { text: "Phản ánh tích cực, sáng tạo thế giới vật chất vào bộ óc của con người là:( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Quá trình có phát triển, bổ sung và hoàn thiện",
+        "Quá trình phức tạp, làm nảy sinh và giải quyết mâu thuẫn",
+        "Quá trình máy móc đơn giản, thụ động và nhất thời",
+        "Quá trình diễn ra ở mọi sự vật, hiện tượng"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo chủ nghĩa duy vật biện chứng, nguồn gốc của nhận thức là:", options: [
+        "Thế giới khách quan", "Thế giới ý niệm", "Bản thân con người", "Thế giới vật chất và ý niệm tuyệt đối"
+      ], answer: [0] },
+      { text: "Trong nhận thức lý tính, hình thức nào là cao nhất?", options: [
+        "Phán đoán", "Suy lý", "Khái niệm", "Trí giác"
+      ], answer: [1] },
+      { text: "Tri giác là hình thức nhận thức nào?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Phản ánh thuộc tính riêng lẻ của sự vật",
+        "Phản ánh sự vật trong trạng thái tĩnh",
+        "Phản ánh một cách tổng hợp các thuộc tính của sự vật",
+        "Phản ánh trực tiếp sự vật qua các giác quan con người"
+      ], answer: [2, 3], multi: true },
+      { text: "Tri giác khác với cảm giác ở điểm nào?", options: [
+        "Là hình ảnh trừu tượng của sự vật",
+        "Tổng hợp của nhiều cảm giác, phản ánh sự vật trọn vẹn hơn",
+        "Không phản ánh sự vật",
+        "Không liên quan đến giác quan"
+      ], answer: [1] },
+      { text: "Hình thức của tư duy trừu tượng là:( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Khái niệm", "Trị giác", "Biểu tượng", "Suy lý"
+      ], answer: [0, 3], multi: true },
+      { text: "Trong quá trình nhận thức, thực tiễn có vai trò gì?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Là giai đoạn cuối cùng và không lặp lại",
+        "Không liên quan đến lý tính",
+        "Là cơ sở của nhận thức",
+        "Là động lực, mục đích và tiêu chuẩn kiểm tra chân lý"
+      ], answer: [2, 3], multi: true },
+      { text: "Vì sao nhận thức lý tính có thể xa rời hiện thực?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Vì chỉ dựa vào cảm giác",
+        "Vì phản ánh gián tiếp và khái quát",
+        "Vì có thể tách rời thực tiễn",
+        "Vì không dựa vào giác quan"
+      ], answer: [1, 2], multi: true },
+      { text: "Mối quan hệ giữa nhận thức cảm tính và lý tính là gì?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Thống nhất với nhau", "Bổ sung cho nhau",
+        "Cái này thay thế cái kia", "Đối lập nhau hoàn toàn"
+      ], answer: [0, 1], multi: true },
+      { text: "Vì sao nhận thức lý tính cần gắn liền với thực tiễn?", options: [
+        "Vì thực tiễn là mục đích duy nhất của nhận thức",
+        "Vì thực tiễn tạo ra mọi hình thức nhận thức",
+        "Vì nhận thức lý tính không thể tồn tại độc lập",
+        "Vì lý tính có nguy cơ xa rời hiện thực nếu không được kiểm tra bởi thực tiễn"
+      ], answer: [3] },
+      { text: "Trong con đường biện chứng của sự nhận thức chân lý, ba yếu tố nào sau đây là các giai đoạn chính?", options: [
+        "Trực quan sinh động – Tư duy trừu tượng – Thực tiễn",
+        "Cảm giác – Tri giác – Biểu tượng",
+        "Trực giác – Lý trí – Trải nghiệm",
+        "Khái niệm – Phán đoán – Suy lý"
+      ], answer: [0] },
+      { text: "Nếu tuyệt đối hóa vai trò của nhận thức cảm tính và phủ nhận vai trò của nhận thức lý tính, sẽ dẫn đến quan điểm nào?", options: [
+        "Chủ nghĩa thực chứng", "Chủ nghĩa duy lý", "Chủ nghĩa kinh nghiệm", "Chủ nghĩa duy cảm"
+      ], answer: [3] },
+      { text: "Nhận định nào sau đây đúng về vai trò của nhận thức lý tính đối với nhận thức cảm tính?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Giúp con người nhận thức bản chất của sự vật",
+        "Là hình thức cảm tính gián tiếp của sự vật",
+        "Là khâu trung gian giữa cảm giác và biểu tượng",
+        "Giúp con người nhận thức sâu sắc hơn về sự vật"
+      ], answer: [0, 3], multi: true },
+      { text: "Nhận định nào sau đây thể hiện đúng mối quan hệ giữa nhận thức và thực tiễn?", options: [
+        "Thực tiễn kiểm nghiệm, hoàn thiện và thúc đẩy nhận thức phát triển sâu sắc hơn",
+        "Nhận thức không cần kiểm nghiệm thực tiễn nếu đã được tư duy lý tính chứng minh",
+        "Nhận thức càng phát triển thì vai trò của thực tiễn càng giảm",
+        "Thực tiễn và nhận thức là hai quá trình hoàn toàn độc lập"
+      ], answer: [0] },
+      { text: "Hình thức của nhận thức cảm tính gồm:( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Khái niệm", "Phán đoán", "Biểu tượng", "Cảm giác"
+      ], answer: [2, 3], multi: true },
+      { text: "Khái niệm là hình thức nhận thức nào?", options: [
+        "Nhận thức thông thường", "Nhận thức cảm tính", "Nhận thức lý tính", "Nhận thức kinh nghiệm"
+      ], answer: [2] },
+      { text: "Theo chủ nghĩa duy vật biện chứng, nhận thức là một quá trình như thế nào?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Phức tạp và luôn phát triển",
+        "Đơn giản và ngừng phát triển",
+        "Đơn giản và bất biến",
+        "Diễn ra theo đường xoáy ốc"
+      ], answer: [0, 3], multi: true },
+      { text: "Cảm giác là hình thức đầu tiên của quá trình nhận thức nào?", options: [
+        "Nhận thức lý tính", "Nhận thức cảm tính", "Nhận thức kinh nghiệm", "Nhận thức khoa học"
+      ], answer: [1] },
+      { text: "Giai đoạn đầu tiên trong quá trình nhận thức là gì?", options: [
+        "Tư duy trừu tượng", "Thực tiễn", "Nhận thức cảm tính", "Nhận thức lý tính"
+      ], answer: [2] },
+      { text: "Phán đoán là hình thức nào của tư duy trừu tượng?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Phản ánh khái quát sự vật",
+        "Phản ánh cảm tính sự vật",
+        "Phản ánh gián tiếp sự vật",
+        "Phản ánh trực tiếp sự vật"
+      ], answer: [0, 2], multi: true },
+      { text: "Trong quá trình nhận thức, hình thức nào sau đây xuất hiện trước?", options: [
+        "Khái niệm", "Phán đoán", "Cảm giác", "Suy lý"
+      ], answer: [2] },
+      { text: "Nhận thức được chia thành mấy loại chính theo lý luận nhận thức của chủ nghĩa duy vật biện chứng?", options: [
+        "5 loại", "2 loại", "3 loại", "4 loại"
+      ], answer: [1] },
+      { text: "Đặc điểm nào dưới đây không phải là của hoạt động thực tiễn?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Mang tính khái quát - lý tính",
+        "Nhằm cải tạo tự nhiên và xã hội",
+        "Mang tính lịch sử - xã hội",
+        "Là hoạt động tư duy trừu tượng"
+      ], answer: [0, 3], multi: true },
+      { text: "Nguồn gốc \"duy nhất và cuối cùng\" của nhận thức theo triết học Mác - Lênin là gì?", options: [
+        "Khoa học", "Thế giới khách quan", "Ý thức con người", "Tri giác của con người"
+      ], answer: [1] },
+      { text: "Nguyên tắc xây dựng lý luận nhận thức của chủ nghĩa duy vật biện chứng là:( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Ý thức con người có vai trò quyết định và chi phối thế giới khách quan",
+        "Cảm giác, tri giác, ý thức nói chung là hình ảnh của thế giới khách quan",
+        "Thừa nhận sự vật khách quan tồn tại bên ngoài và độc lập với ý thức con người",
+        "Con người nhận thức được bề ngoài sinh động của sự vật hiện tượng, không nhận thức được bản chất của chúng"
+      ], answer: [1, 2], multi: true },
+      { text: "Khách thể của nhận thức là gì?( Sinh viên chọn 2 phương án đúng nhất )", options: [
+        "Hiện thực khách quan", "Thế giới vật chất",
+        "Tư tưởng của con người", "Tri giác của con người"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm của chủ nghĩa duy vật biện chứng, kết quả của nhận thức kinh nghiệm là gì?", options: [
+        "Tri thức thực nghiệm khoa học hoặc tri thức khái quát bản chất sự vật",
+        "Những tri thức kinh nghiệm thông thường hoặc tri thức thực nghiệm khoa học",
+        "Những tri thức kinh nghiệm thông thường hoặc tri thức mang tính quy luật",
+        "Những tri thức kinh nghiệm thông thường hoặc tri thức khái quát bản chất sự vật"
+      ], answer: [1] },
+      { text: "Thực tiễn không bao gồm dạng hoạt động nào sau đây?", options: [
+        "Hoạt động thực nghiệm khoa học", "Hoạt động sản xuất vật chất",
+        "Hoạt động tư duy lý tính", "Hoạt động chính trị xã hội"
+      ], answer: [2] },
+      { text: "Chỉ ra các phát biểu đúng/sai:", type: "truth", rows: [
+        ["1) Thực tiễn là cơ sở của nhận thức", "Đúng"],
+        ["2) Thực tiễn là tiêu chuẩn của chân lý", "Đúng"],
+        ["3) Thực tiễn là mục đích của nhận thức", "Đúng"],
+        ["4) Thực tiễn là một loại nhận thức độc lập", "Sai"]
+      ], choices: ["Đúng", "Sai"] },
+      { text: "Chỉ ra các phát biểu đúng/sai:", type: "truth", rows: [
+        ["1) Nếu nhiều người cùng có chung một trải nghiệm thì điều đó chắc chắn đúng", "Sai"],
+        ["2) Nhận thức kinh nghiệm là nền tảng ban đầu cho quá trình hình thành tri thức của con người", "Đúng"],
+        ["3) Nhận thức kinh nghiệm luôn đúng vì nó dựa trên những gì ta đã trải qua", "Sai"],
+        ["4) Theo quan điểm của chủ nghĩa duy vật biện chứng, nhận thức kinh nghiệm là nhận thức dựa trên sự quan sát trực tiếp các sự vật, hiện tượng hay các thí nghiệm, thực nghiệm khoa học", "Đúng"]
+      ], choices: ["Đúng", "Sai"] }
+    ];
+
+    const lesson7Questions = [
+      { text: "Khi xuất hiện mâu thuẫn gay gắt giữa lực lượng sản xuất và quan hệ sản xuất thì:", options: [
+        "Quan hệ sản xuất sẽ tự động thay đổi cho phù hợp với lực lượng sản xuất",
+        "Quan hệ sản xuất được thay đổi thông qua những cuộc cải cách và các cuộc cách mạng xã hội",
+        "Quan hệ sản xuất không thể thay đổi được vì nó được bảo vệ bằng quyền lực nhà nước",
+        "Lực lượng sản xuất phải tự điều chỉnh cho phù hợp với quan hệ sản xuất"
+      ], answer: [1] },
+      { text: `Kéo thả các định nghĩa sau khớp với các khái niệm từ 1-4 vế trái dưới đây:
+Dưới đây là cách ghép nối đúng dựa trên kiến thức lý luận về Lực lượng sản xuất:
+Vế trái (Khái niệm/Định nghĩa)
+Vế phải (Đáp án đúng)
+Người lao động
+Tri thức
+Tư liệu lao động
+Phương tiện lao động
+Yếu tố "động" nhất trong lực lượng sản xuất là:
+Công cụ lao động
+Ngày nay, yếu tố trở thành lực lượng sản xuất trực tiếp là:
+Khoa học công nghệ`, invalid: true, options: [] },
+      { text: "Kéo thả các định nghĩa sau khớp với các khái niệm từ 1-4 vế trái dưới đây", type: "match", rows: [
+        ["Công cụ lao động:", "Là những phương tiện vật chất mà con người trực tiếp sử dụng để tác động vào đối tượng lao động."],
+        ["Tư liệu sản xuất:", "Là điều kiện vật chất cần thiết để tổ chức sản xuất."],
+        ["Đối tượng lao động:", "Là những yếu tố vật chất của sản xuất mà con người dùng tư liệu lao động tác động lên."],
+        ["Lực lượng sản xuất:", "Là sự thể hiện năng lực thực tiễn cơ bản nhất - năng lực hoạt động sản xuất vật chất của con người."]
+      ], choices: [
+        "Là những phương tiện vật chất mà con người trực tiếp sử dụng để tác động vào đối tượng lao động.",
+        "Là điều kiện vật chất cần thiết để tổ chức sản xuất.",
+        "Là những yếu tố vật chất của sản xuất mà con người dùng tư liệu lao động tác động lên.",
+        "Là sự thể hiện năng lực thực tiễn cơ bản nhất - năng lực hoạt động sản xuất vật chất của con người."
+      ] },
+      { text: "Kéo thả các định nghĩa sau khớp với các khái niệm từ 1-3 về trái dưới đây:", type: "match", rows: [
+        ["1. Quan hệ về tổ chức và quản lý sản xuất:", "Có vai trò quyết định trực tiếp đến quy mô, tốc độ, hiệu quả của nền sản xuất"],
+        ["2. Quan hệ sở hữu về tư liệu sản xuất:", "Quy định địa vị kinh tế - xã hội của các tập đoàn người trong sản xuất"],
+        ["3. Quan hệ về phân phối sản phẩm lao động:", "Kích thích trực tiếp lợi ích con người; thúc đẩy tốc độ, nhịp điệu sản xuất"]
+      ], choices: [
+        "Có vai trò quyết định trực tiếp đến quy mô, tốc độ, hiệu quả của nền sản xuất",
+        "Quy định địa vị kinh tế - xã hội của các tập đoàn người trong sản xuất",
+        "Kích thích trực tiếp lợi ích con người; thúc đẩy tốc độ, nhịp điệu sản xuất"
+      ] },
+      { text: "Kéo thả nội dung vào ô tương ứng:\nĐoạn trích: Mác viết: “Cái cối xay quay bằng tay đưa lại cho xã hội có ... , cái cối xay chạy bằng hơi nước đưa lại cho xã hội có nhà tư bản công nghiệp”", type: "drag",
+        items: ["Lãnh chúa"],
+        targets: ["Điền vào chỗ trống trong đoạn trích:"],
+        answer: [0]
+      },
+      { text: "Những thời đại kinh tế khác nhau không phải ở chỗ chúng sản xuất ra cái gì mà là ở chỗ chúng sản xuất bằng cách nào, với những _____ nào", type: "drag",
+        items: ["Tư liệu lao động"], targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Lực lượng sản xuất vận động, phát triển không ngừng sẽ mâu thuẫn với tính _____ tương đối của quan hệ sản xuất.", type: "drag",
+        items: ["đứng im"], targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Trong nền sản xuất hàng hóa, khuynh hướng của quá trình sản xuất là không ngừng biến đổi phát triển. Dựa vào kiến thức về chủ nghĩa duy vật lịch sử, em hãy cho biết sự biến đổi đó bắt đầu từ:", options: [
+        "Sự phát triển của khoa học kỹ thuật",
+        "Sự biến đổi, phát triển của lực lượng sản xuất",
+        "Sự biến đổi, phát triển của cách thức sản xuất",
+        "Sự biến đổi, phát triển của kỹ thuật sản xuất"
+      ], answer: [1] },
+      { text: "Theo quan điểm duy vật lịch sử, khái niệm kiến trúc thượng tầng là khái niệm dùng để chỉ:\n(Chọn 2 đáp án trả lời đúng)", options: [
+        "Toàn bộ thiết chế chính trị – xã hội tương ứng",
+        "Toàn bộ hệ thống kết cấu các hình thái ý thức xã hội",
+        "Toàn bộ thiết chế chính trị của xã hội",
+        "Toàn bộ thiết chế chính trị và pháp luật của xã hội"
+      ], answer: [0, 1], multi: true },
+      { text: "Kéo thả vào chỗ trống: Chủ nghĩa duy vật lịch sử khẳng định rằng: “Cơ sở hạ tầng là toàn bộ những ____ hợp thành cơ cấu kinh tế của xã hội trong một giai đoạn lịch sử nhất định”.", type: "drag",
+        items: ["quan hệ sản xuất"], targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Khi cơ sở hạ tầng thay đổi, kiến trúc thượng tầng cũng sẽ thay đổi theo. Yếu tố nào của kiến trúc thượng tầng thay đổi nhanh nhất:", options: [
+        "Triết học", "Văn hóa, nghệ thuật", "Tôn giáo, đạo đức", "Nhà nước"
+      ], answer: [3] },
+      { text: "Theo quan điểm duy vật lịch sử, quan hệ cơ bản nhất, quyết định mọi quan hệ khác của xã hội là:", options: [
+        "Quan hệ tôn giáo.", "Quan hệ kinh tế", "Quan hệ quyền lực nhà nước.", "Quan hệ văn hóa"
+      ], answer: [1] },
+      { text: "Sự tác động của kiến trúc thượng tầng đối với cơ sở hạ tầng là sự tác động:", options: [
+        "Tiêu cực là cơ bản còn đôi khi theo chiều hướng tích cực.",
+        "Luôn luôn diễn ra theo chiều hướng tích cực.",
+        "Luôn luôn diễn ra theo chiều hướng tiêu cực.",
+        "Có thể diễn ra theo chiều hướng tích cực hoặc tiêu cực."
+      ], answer: [3] },
+      { text: "Khi cơ sở hạ tầng thay đổi, kiến trúc thượng tầng cũng sẽ thay đổi theo. Yếu tố nào của kiến trúc thượng tầng thay đổi chậm hơn (Chọn 2 đáp án trả lời đúng):", options: [
+        "Văn hóa, nghệ thuật", "Đạo đức", "Nhà nước", "Tôn giáo"
+      ], answer: [0, 3], multi: true },
+      { text: "Vai trò của kiến trúc thượng tầng đối với sự phát triển của cơ sở hạ tầng là gì? (Chọn 2 đáp án trả lời đúng):", options: [
+        "Kiến trúc thượng tầng định hướng, tổ chức, xây dựng chế độ kinh tế của kiến trúc thượng tầng",
+        "Kiến trúc thượng tầng sản sinh ra cơ sở hạ tầng mới",
+        "Kiến trúc thượng tầng đảm bảo sự thống trị về kinh tế của các giai cấp trong xã hội",
+        "Kiến trúc thượng tầng ngăn chặn cơ sở hạ tầng mới, đấu tranh xóa bỏ tàn dư cơ sở hạ tầng cũ"
+      ], answer: [2, 3], multi: true },
+      { text: "Dựa vào kiến thức đã học về mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng, hãy cho biết khẳng định nào chưa chính xác trong các khẳng định sau: (Chọn 2 đáp án trả lời)", options: [
+        "Cơ sở hạ tầng thay đổi kéo theo sự thay đổi của kiến trúc thượng tầng.",
+        "Kiến trúc thượng tầng không có sự ảnh hưởng đến sự phát triển của cơ sở hạ tầng.",
+        "Khi cơ sở hạ tầng thay đổi, ngay lập tức mọi bộ phận của kiến trúc thượng tầng thay đổi theo.",
+        "Kiến trúc thượng tầng có tính độc lập tương đối so với cơ sở hạ tầng."
+      ], answer: [1, 2], multi: true },
+      { text: "Những phạm trù nào sau đây thuộc về khái niệm lực lượng sản xuất? (Chọn 3 đáp án trả lời đúng)", options: [
+        "Phương tiện lao động", "Tư liệu sản xuất", "Phương thức sản xuất", "Người lao động"
+      ], answer: [0, 1, 3], multi: true },
+      { text: "Mối quan hệ giữa lực lượng sản xuất và quan hệ sản xuất là mối quan hệ:", options: [
+        "Luôn luôn đối lập loại trừ nhau",
+        "Thống nhất và đấu tranh của các mặt đối lập",
+        "Luôn luôn thống nhất với nhau",
+        "Có lúc hoàn toàn đối lập nhau, có khi hoàn toàn thống nhất với nhau"
+      ], answer: [1] },
+      { text: "Theo quan điểm duy vật lịch sử, nguồn gốc, động lực cơ bản nhất của mọi quá trình phát triển xã hội là:", options: [
+        "Sự phát triển của khoa học và công nghệ",
+        "Sự phát triển của khoa học",
+        "Sự vận động của mâu thuẫn giữa lực lượng sản xuất và quan hệ sản xuất",
+        "Sự đấu tranh của các giai cấp trong xã hội"
+      ], answer: [2] },
+      { text: `Kéo thả các phạm trù được liệt kê dưới đây vào các cột tương ứng:
+1) Cơ sở hạ tầng
+2) Quan hệ sản xuất
+Quan hệ sản xuất mầm mống
+Quan hệ sở hữu tư liệu sản xuất
+Quan hệ sản xuất thống trị
+Quan hệ tổ chức và quản lý sản xuất
+Quan hệ sản xuất tàn dư
+Quan hệ phân phối sản phẩm`, invalid: true, options: [] },
+      { text: "Trong kiến trúc thượng tầng của xã hội có giai cấp, yếu tố cơ bản nhất, có tác động trực tiếp và mạnh mẽ nhất tới cơ sở hạ tầng của xã hội là yếu tố:", options: [
+        "Tổ chức chính đảng", "Tổ chức tôn giáo", "Tổ chức nhà nước", "Các tổ chức văn hóa – xã hội"
+      ], answer: [2] },
+      { text: "Thực chất của quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng:", options: [
+        "Quan hệ giữa tồn tại xã hội với ý thức xã hội",
+        "Quan hệ giữa đời sống vật chất và đời sống tinh thần của xã hội",
+        "Quan hệ giữa vật chất và tinh thần",
+        "Quan hệ giữa kinh tế và chính trị"
+      ], answer: [3] },
+      { text: "Cơ sở kinh tế thay đổi thì toàn bộ cái kiến trúc thượng tầng đồ sộ cũng bị đảo lộn ít nhiều nhanh chóng”", invalid: true, options: [] },
+      { text: "Cơ sở hạ tầng của Việt Nam trong thời kỳ quá độ đi lên xây dựng chủ nghĩa xã hội được xác định là:", options: [
+        "Nền sản xuất được công nghiệp hóa, hiện đại hóa ở trình độ tiên tiến",
+        "Hệ thống điện - đường - trường - trạm hiện đại, rộng khắp cả nước.",
+        "Nền kinh tế hàng hóa nhiều thành phần theo định hướng xã hội chủ nghĩa.",
+        "Nền kinh tế thị trường."
+      ], answer: [2] },
+      { text: "Sự phát triển của chính trị, pháp luật, triết học, tôn giáo, văn học, nghệ thuật, v.v. đều dựa trên cơ sở _____ . Nhưng tất cả chúng cũng có ảnh hưởng lẫn nhau và ảnh hưởng đến cơ sở kinh tế”", type: "drag",
+        items: ["Sự phát triển kinh tế"], targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Khái niệm quan hệ sản xuất dùng để chỉ:", options: [
+        "Mối quan hệ kinh tế trong quá trình sản xuất và tái sản xuất của xã hội",
+        "Mối quan hệ giữa con người với con người trong quá trình lao động",
+        "Mối quan hệ giữa con người và giới tự nhiên",
+        "Mối quan hệ giữa con người và con người"
+      ], answer: [0] },
+      { text: "Yếu tố cách mạng nhất trong lực lượng sản xuất?", options: [
+        "Công cụ lao động", "Quan hệ sở hữu tư liệu sản xuất", "Phương tiện lao động", "Người lao động"
+      ], answer: [0] },
+      { text: "Các quan hệ sản xuất của cơ sở hạ tầng hình thành nên:", options: [
+        "Quan điểm văn hóa, nghệ thuật", "Quan điểm chính trị", "Cơ cấu kinh tế", "Ý thức đạo đức"
+      ], answer: [2] },
+      { text: "Theo quan điểm của chủ nghĩa duy vật lịch sử, quan hệ cơ bản nhất trong hệ thống quan hệ sản xuất là mối quan hệ giữa người với người về:", options: [
+        "Sở hữu về công cụ lao động", "Sở hữu", "Sở hữu về tư liệu sản xuất", "Sở hữu về trí tuệ"
+      ], answer: [2] },
+      { text: "Sau khi nghiên cứu nội dung quy luật quan hệ sản xuất phù hợp với trình độ phát triển của lực lượng sản xuất, để phát triển nền kinh tế Việt Nam cần: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Phải bắt đầu từ phát triển quan hệ sản xuất, trước hết là xác lập quan hệ sở hữu về tư liệu sản xuất, sau đó phát triển lực lượng sản xuất phù hợp.",
+        "Phải bắt đầu từ phát triển quan hệ sản xuất, trước hết là xác lập quan hệ tổ chức quản lý sản xuất, sau đó phát triển lực lượng sản xuất phù hợp.",
+        "Phải bắt đầu từ phát triển lực lượng sản xuất, trước hết là phát triển nguồn lực người lao động.",
+        "Phải bắt đầu từ phát triển lực lượng sản xuất, đặc biệt chú trọng phát triển công cụ lao động."
+      ], answer: [2, 3], multi: true }
+    ];
+
+    const lesson8Questions = [
+      { text: "Cách viết nào sau đây là đúng:", options: [
+        "Hình thái kinh tế của xã hội",
+        "Hình thái xã hội",
+        "Hình thái kinh tế — xã hội",
+        "Hình thái kinh tế, xã hội"
+      ], answer: [2] },
+      { text: "Kéo thả đáp án đúng vào chỗ trống:\n“Hình thái kinh tế - xã hội là một phạm trù của chủ nghĩa duy vật lịch sử dùng để chỉ xã hội ở từng giai đoạn lịch sử nhất định, với một kiểu ____ đặc trưng cho xã hội đó, phù hợp với một trình độ nhất định của lực lượng sản xuất, và với một kiểu kiến trúc thượng tầng tương ứng được xây dựng trên những quan hệ sản xuất đó”", type: "drag",
+        items: ["Quan hệ sản xuất"], targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Khái niệm ý thức xã hội dùng để chỉ: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Được nảy sinh từ tồn tại xã hội và phản ánh tồn tại xã hội trong những giai đoạn nhất định",
+        "Phương diện sinh hoạt vật chất của xã hội",
+        "Những đặc trưng về tâm lý, tính cách của một cộng đồng dân tộc",
+        "Phương diện sinh hoạt tinh thần của đời sống xã hội"
+      ], answer: [0, 3], multi: true },
+      { text: "Các yếu tố cấu thành tồn tại xã hội bao gồm: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Phương thức sản xuất",
+        "Điều kiện tự nhiên - hoàn cảnh địa lý",
+        "Lực lượng sản xuất",
+        "Kiến trúc thượng tầng"
+      ], answer: [0, 1], multi: true },
+      { text: "Theo quan điểm duy vật lịch sử, yếu tố cơ bản nhất tạo thành điều kiện sinh hoạt vật chất của xã hội là các yếu tố thuộc về:", options: [
+        "Phương thức sản xuất ra của cải vật chất",
+        "Không có yếu tố nào là cơ bản nhất mà tùy thuộc các điều kiện lịch sử cụ thể khác nhau",
+        "Điều kiện dân cư",
+        "Điều kiện tự nhiên"
+      ], answer: [0] },
+      { text: "C. Mác dự báo tri thức trở thành lực lượng sản xuất trực tiếp hiện nay đang được thực tiễn của cuộc cách mạng chuyển đổi số, thời đại trí tuệ nhân tạo xác nhận tính đúng đắn. Điều này thể hiện:", options: [
+        "Ý thức xã hội thường lạc hậu hơn tồn tại xã hội",
+        "Ý thức xã hội có tính kế thừa tồn tại xã hội",
+        "Ý thức xã hội có thể vượt trước tồn tại xã hội",
+        "Ý thức xã hội tác động trở lại tồn tại xã hội"
+      ], answer: [2] },
+      { text: "Các tính chất nào sau đây biểu hiện tính độc lập tương đối của ý thức xã hội (Chọn 2 đáp án trả lời đúng)", options: [
+        "Tính lệ thuộc", "Tính lạc hậu", "Tính tích cực sáng tạo", "Tính kế thừa"
+      ], answer: [1, 3], multi: true },
+      { text: "Theo quan điểm triết học của Mác - Lênin, lựa chọn phương án đúng về đặc điểm hệ tư tưởng. (Chọn 2 đáp án trả lời đúng)", options: [
+        "Hệ tư tưởng là hệ thống những quan điểm, hệ thống hóa, khái quát hóa các kinh nghiệm xã hội để hình thành nên những quan điểm, những tư tưởng về chính trị, pháp luật, triết học, đạo đức",
+        "Tất cả hệ tư tưởng đều là hệ tư tưởng khoa học",
+        "Hệ tư tưởng không ảnh hưởng đến sự phát triển của khoa học. Hệ tư tưởng ra đời trực tiếp từ tâm lý xã hội, là sự cô đọng của tâm lý xã hội",
+        "Hệ tư tưởng là giai đoạn phát triển cao hơn của ý thức xã hội, là sự nhận thức lý luận về tồn tại xã hội."
+      ], answer: [0, 3], multi: true },
+      { text: "Ý thức xã hội gồm các hình thái ý thức xã hội cơ bản nào sau đây?", options: [
+        "Ý thức chính trị, ý thức pháp quyền, ý thức đạo đức, ý thức thẩm mỹ, ý thức tôn giáo, ý thức khoa học, ý thức triết học.",
+        "Ý thức chính trị, ý thức pháp quyền, ý thức văn hóa, ý thức môi trường, ý thức tôn giáo, ý thức khoa học, ý thức triết học.",
+        "Ý thức chính trị, ý thức pháp quyền, ý thức đạo đức, ý thức dân tộc, ý thức tôn giáo, ý thức khoa học, ý thức triết học.",
+        "Ý thức chính trị, ý thức pháp quyền, ý thức đạo đức, ý thức văn hóa, ý thức tôn giáo, ý thức khoa học, ý thức triết học."
+      ], answer: [0] },
+      { text: "Đâu là nhận định SAI về ý thức xã hội?", options: [
+        "Ý thức xã hội có thể vượt trước tồn tại xã hội.",
+        "Ý thức xã hội có tính độc lập tương đối đối với tồn tại xã hội.",
+        "Ý thức xã hội luôn lạc hậu hơn tồn tại xã hội.",
+        "Ý thức xã hội có thể tác động trở lại tồn tại xã hội."
+      ], answer: [2] },
+      { text: "Nguồn gốc kinh tế của sự vận động và phát triển của hình thái kinh tế - xã hội? Chọn phán đoán sai: (Chọn 3 phán đoán trả lời sai)", options: [
+        "Sự tăng lên không ngừng của năng suất lao động",
+        "Mâu thuẫn giai cấp trong xã hội có giai cấp",
+        "Mâu thuẫn giữa lực lượng sản xuất với quan hệ sản xuất",
+        "Ý muốn của các vĩ nhân, lãnh tụ"
+      ], answer: [1, 2, 3], multi: true },
+      { text: "Nhân tố quyết định xu hướng phát triển của các hình thái kinh tế - xã hội là:", options: [
+        "Ý thức của giai cấp nắm quyền lực nhà nước",
+        "Điều kiện khách quan và chủ quan của mỗi xã hội",
+        "Quy luật khách quan",
+        "Ý chí của nhân dân"
+      ], answer: [2] },
+      { text: `Kéo thả đáp án đúng vào chỗ trống để hoàn thiện khẳng định sau của Mác:
+[Lịch sử tất yếu theo quy luật] [Lịch sử đi lên] [Lịch sử của các nước châu Âu] [Lịch sử của các dân tộc] [Lịch sử khách quan]
+“Sự phát triển của các hình thái kinh tế - xã hội là một quá trình ______”.
+Lịch sử - tự nhiên`, invalid: true, options: [] },
+      { text: "Lựa chọn 2 đáp án để hoàn thiện định nghĩa về kiến trúc thượng tầng là? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Hệ tư tưởng của giai cấp thống trị",
+        "Toàn bộ những thiết chế xã hội tương ứng",
+        "Toàn bộ những quan điểm chính trị, pháp quyền, đạo đức, triết học, tôn giáo",
+        "Toàn bộ những quan điểm của xã hội"
+      ], answer: [1, 2], multi: true },
+      { text: "Sau khi học xong lý thuyết về hình thái kinh tế – xã hội do C. Mác đề xướng, em hãy cho biết lý thuyết hình thái kinh tế - xã hội đã khắc phục được những hạn chế cơ bản nào trong các quan niệm về xã hội đã từng có trước đây?", options: [
+        "Quan niệm duy tâm và tôn giáo",
+        "Quan niệm trừu tượng, duy vật tầm thường và phi lịch sử",
+        "Quan niệm duy tâm khách quan và tôn giáo, huyền thoại",
+        "Quan niệm siêu hình và duy tâm, tôn giáo"
+      ], answer: [1] },
+      { text: "Đặc điểm của ý thức xã hội thông thường (Chọn 2 đáp án trả lời đúng)", options: [
+        "Phản ánh trực tiếp đời sống hàng ngày",
+        "Có tính chỉnh thể, hệ thống",
+        "Rất phong phú sinh động",
+        "Phản ánh gián tiếp hiện thực và rất phong phú sinh động"
+      ], answer: [0, 2], multi: true },
+      { text: "Thực chất của việc bỏ qua giai đoạn phát triển tư bản chủ nghĩa ở nước ta là gì? (Sinh viên chọn 2 phương án đúng nhất)", options: [
+        "Bỏ qua các giai đoạn phát triển tuần tự như các nước tư bản chủ nghĩa Tây Âu",
+        "Bỏ qua lực lượng sản xuất, quan hệ sản xuất và kiến trúc thượng tầng tư bản chủ nghĩa",
+        "Bỏ qua sự thống trị của cơ sở hạ tầng và kiến trúc thượng tầng tư bản chủ nghĩa",
+        "Bỏ qua toàn bộ hệ thống kinh tế tư bản chủ nghĩa"
+      ], answer: [0, 2], multi: true },
+      { text: "Tại sao tư tưởng \"trọng nam khinh nữ\" vẫn tồn tại trong thời kỳ quá độ? (Chọn hai đáp án trả lời)", options: [
+        "Do sự tác động lẫn nhau của các hình thái ý thức xã hội",
+        "Do sức mạnh của thói quen, tập quán, truyền thống",
+        "Do điều kiện tồn tại xã hội phát triển quá nhanh",
+        "Do tính bảo thủ của hình thái ý thức đạo đức"
+      ], answer: [1, 3], multi: true },
+      { text: "Mối quan hệ giữa ý thức xã hội và ý thức cá nhân\nVăn bản: Mối quan hệ giữa ý thức xã hội và ý thức cá nhân là biểu thị của mối quan hệ:", options: [
+        "Nội dung và hình thức",
+        "Bản chất và hiện tượng",
+        "Cái chung và cái riêng",
+        "Cái chung và cái đơn nhấ"
+      ], answer: [2] },
+      { text: "Quá trình \"lịch sử – tự nhiên\" của sự phát triển các hình thái kinh tế – xã hội là quá trình phát triển theo:", options: [
+        "Ý niệm tuyệt đối", "Ý muốn chủ quan của con người",
+        "Quy luật tự nhiên", "Quy luật khách quan của xã hội"
+      ], answer: [3] },
+      { text: "Kéo thả đáp án đúng vào chỗ trống trong câu sau:\nCác lựa chọn: Phát triển từ từ | Phát triển nhảy vọt | Phát triển | Phát triển tuần tự | Phát triển rút ngắn\nĐoạn văn: Quá trình lịch sử - tự nhiên của sự phát triển xã hội chẳng những diễn ra bằng con đường _____ mà còn bao hàm cả sự bỏ qua trong những điều kiện lịch sử nhất định, hoặc một vài hình thái kinh tế - xã hội nhất định", type: "drag",
+        items: ["Phát triển từ từ", "Phát triển nhảy vọt", "Phát triển", "Phát triển tuần tự", "Phát triển rút ngắn"],
+        targets: ["Điền vào chỗ trống:"], answer: [3]
+      },
+      { text: "Theo quan điểm của chủ nghĩa duy vật lịch sử, nguyên nhân tính lạc hậu của ý thức xã hội? (Chọn 2 đáp án trả lời đúng)", options: [
+        "Do ý thức xã hội có tính kế thừa",
+        "Do ý thức xã hội không phản ánh kịp sự phát triển của cuộc sống",
+        "Do ý thức xã hội phản ánh trực tiếp tồn tại xã hội",
+        "Do ý thức của tâm lý xã hội"
+      ], answer: [0, 1], multi: true },
+      { text: "Lựa chọn phương án đúng theo quan điểm triết học Mác - Lênin về đặc điểm tâm lý xã hội:", options: [
+        "Tâm lý xã hội là sự phản ánh gián tiếp có tính tự phát thường ghi lại những mặt bề ngoài tồn tại xã hội.",
+        "Tâm lý xã hội mang tính phong phú và phức tạp, nhưng không tuân theo các quy luật tâm lý.",
+        "Tâm lý xã hội không có vai trò quan trọng trong ý thức xã hội.",
+        "Tâm lý xã hội là sự phản ánh một cách trực tiếp và tự phát những điều kiện sinh hoạt hàng ngày của con người, nên nó chỉ ghi lại những gì dễ thấy, những gì nằm trên bề mặt của tồn tại xã hội"
+      ], answer: [3] },
+      { text: "Trong các hình thái ý thức xã hội sau, hình thái ý thức xã hội nào tác động đến kinh tế một cách trực tiếp:", options: [
+        "Ý thức đạo đức", "Ý thức pháp quyền", "Ý thức chính trị", "Ý thức thẩm mỹ"
+      ], answer: [2] },
+      { text: "Lý luận hình thái kinh tế - xã hội là cơ sở khoa học để:", options: [
+        "Giải thích đầy đủ mọi hiện tượng xã hội.",
+        "Xác lập phương pháp luận khoa học chung nhất để giải thích các hiện tượng xã hội.",
+        "Xác lập phương pháp luận chung ở tầm \"duy nhất khoa học\" cho mọi quá trình nghiên cứu.",
+        "Giải thích chính xác và đầy đủ mọi hiện tượng xã hội"
+      ], answer: [1] },
+      { text: "Mỗi hình thái kinh tế - xã hội đều được cấu thành từ các nhân tố (Chọn 2 phương án trả lời đúng):", options: [
+        "Lực lượng sản xuất", "Phương thức sản xuất", "Quan hệ kinh tế", "Kiến trúc thượng tầng."
+      ], answer: [0, 3], multi: true },
+      { text: "Theo C.Mác, về đại thể, quá trình phát triển tuần tự của xã hội loài người đã lần lượt trải qua các phương thức sản xuất:", options: [
+        "Nguyên thủy, Á châu, cổ đại, phong kiến và tư sản hiện đại",
+        "Á châu, cổ đại, phong kiến và tư sản hiện đại",
+        "Nô lệ, phong kiến, tư sản và xã hội chủ nghĩa",
+        "Cộng sản nguyên thủy, chiếm hữu nô lệ, phong kiến, tư sản chủ nghĩa và cộng sản chủ nghĩa"
+      ], answer: [0] },
+      { text: "Muốn nhận thức và cải tạo xã hội cũ, xây dựng xã hội mới phải tác động vào những yếu tố nào? (Chọn 2 đáp án trả lời đúng):", options: [
+        "Quan hệ xã hội", "Tồn tại xã hội", "Kiến trúc thượng tầng", "Phương thức sản xuất"
+      ], answer: [1, 3], multi: true },
+      { text: "Lựa chọn phương án SAI về vai trò của tồn tại xã hội trong quan hệ biện chứng với ý thức xã hội theo quan điểm của chủ nghĩa Mác - Lênin: (Chọn 2 phương án trả lời SAI)", options: [
+        "Tồn tại xã hội có vai trò quyết định đối với các hình thái ý thức xã hội một cách đơn giản, trực tiếp, không qua các khâu trung gian.",
+        "Ý thức xã hội không phụ thuộc một cách thụ động vào tồn tại xã hội.",
+        "Tồn tại xã hội quyết định ý thức xã hội.",
+        "Khi tồn tại xã hội đã thay đổi thì toàn bộ các yếu tố cấu thành ý thức xã hội biến đổi ngay lập tức."
+      ], answer: [0, 3], multi: true }
+    ];
+
+    const lesson9Questions = [
+      { text: "Sự phân chia giai cấp trong xã hội bắt đầu từ hình thái kinh tế – xã hội nào?", options: [
+        "Cộng sản nguyên thủy", "Tư bản chủ nghĩa", "Chiếm hữu nô lệ", "Phong kiến"
+      ], answer: [2] },
+      { text: "Kết cấu giai cấp trong xã hội có giai cấp thường gồm: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Tầng lớp trung gian",
+        "Các giai cấp cơ bản và các giai cấp không cơ bản",
+        "Các giai cấp đối kháng",
+        "Giai cấp thống trị và giai cấp bị trị"
+      ], answer: [1, 3], multi: true },
+      { text: "Dân tộc hiểu theo nghĩa hẹp, bao gồm: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Tất cả các dân tộc thiểu số", "Tộc người", "Cộng đồng xã hội", "Toàn bộ nhân dân một nước"
+      ], answer: [1, 2], multi: true },
+      { text: "Dân tộc hiểu theo nghĩa là quốc gia – dân tộc, bao gồm:", options: [
+        "Toàn bộ nhân dân một nước", "Một số dân tộc", "Một bộ phận nhân dân", "Tất cả các dân tộc thiểu số"
+      ], answer: [0] },
+      { text: "Sự phát triển của lịch sử xã hội, thứ tự sự phát triển các hình thức cộng đồng người là:", options: [
+        "Thị tộc – Bộ lạc – Liên minh thị tộc – Bộ tộc – Dân tộc",
+        "Bộ tộc – Thị tộc – Bộ lạc – Dân tộc",
+        "Thị tộc – Bộ lạc – Bộ tộc – Dân tộc",
+        "Bộ lạc – Bộ tộc – Thị tộc – Dân tộc"
+      ], answer: [2] },
+      { text: "Kéo thả đáp án đúng vào ô trống:\nĐại hội XII khẳng định “Đoàn kết các dân tộc có vị trí ______ trong sự nghiệp cách mạng ở nước ta”.", type: "drag",
+        items: ["Chiến lược", "Nhất thời", "Quan trọng", "Sách lược"],
+        targets: ["Điền vào chỗ trống:"], answer: [0]
+      },
+      { text: "Cuộc đấu tranh giai cấp ở Việt Nam hiện nay đang được diễn ra trong điều kiện mới với những thuận lợi rất cơ bản. Đó là: (Chọn 2 đáp án đúng nhất)", options: [
+        "Khối liên minh giai cấp công nhân – nông dân – trí thức dưới sự lãnh đạo của Đảng được củng cố vững chắc",
+        "Giai cấp nông dân Việt Nam đã và đang đóng vai trò quan trọng trong việc nâng cao chất lượng cuộc sống của toàn xã hội",
+        "Tầng lớp trí thức ngày càng phát triển đóng vai trò là lực lượng nòng cốt sáng tạo và truyền bá tri thức",
+        "Giai cấp công nhân Việt Nam trở thành giai cấp lãnh đạo"
+      ], answer: [0, 3], multi: true },
+      { text: "Giai cấp thống trị về kinh tế trong xã hội trở thành giai cấp thống trị về chính trị, là nhờ:", options: [
+        "Hệ tư tưởng", "Nhà nước", "Hệ thống luật pháp", "Vị thế chính trị"
+      ], answer: [1] },
+      { text: "Thực chất của lịch sử xã hội loài người là:", options: [
+        "Lịch sử của sản xuất vật chất", "Lịch sử của tôn giáo",
+        "Lịch sử của văn hóa", "Lịch sử đấu tranh giai cấp"
+      ], answer: [3] },
+      { text: "Vấn đề xét đến cùng chi phối sự vận động, phát triển của một giai cấp là:", options: [
+        "Đường lối tổ chức", "Hệ tư tưởng", "Lợi ích cơ bản", "Đường lối chính trị của giai cấp thống trị"
+      ], answer: [2] },
+      { text: "Mâu thuẫn đối kháng giữa các giai cấp là do:", options: [
+        "Sự khác nhau về tư tưởng, lối sống",
+        "Sự đối lập về lợi ích cơ bản – lợi ích kinh tế",
+        "Sự khác nhau giữa giàu và nghèo",
+        "Sự khác nhau về mức thu nhập"
+      ], answer: [1] },
+      { text: "Hình thức cộng đồng người bộ tộc tồn tại trong xã hội nào? (Chọn 2 đáp án trả lời đúng)", options: [
+        "Cộng sản nguyên thủy", "Chiếm hữu nô lệ", "Phong kiến", "Tư bản chủ nghĩa"
+      ], answer: [1, 2], multi: true },
+      { text: "Xu hướng thứ nhất của sự phát triển dân tộc là:", options: [
+        "Các dân tộc muốn tách ra để thành lập các quốc gia dân tộc độc lập",
+        "Các dân tộc muốn liên hiệp lại với nhau",
+        "Các dân tộc tự quyết định ranh giới lãnh thổ",
+        "Các dân tộc hợp thành quốc gia thống nhất"
+      ], answer: [0] },
+      { text: `Kéo thả các đáp án vào cột tương ứng:
+1) Sự hình thành và phát triển của dân tộc ở Việt Nam
+Gắn với quá trình đấu tranh chống ngoại xâm, bảo vệ nền văn hóa dân tộc
+Gắn với việc cải tạo thiên nhiên, chống lại sức mạnh của thiên nhiên
+Gắn liền với nhu cầu dựng nước và giữ nước
+2) Sự hình thành và phát triển của dân tộc ở các nước Châu Âu
+Gắn liền với phong trào đấu tranh chống chủ nghĩa đế quốc giải phóng dân tộc
+Gắn liền với cuộc cách mạng tư sản do giai cấp tư sản lãnh đạo
+Gắn với thời kỳ các dân tộc xã hội chủ nghĩa ra đời`, invalid: true, options: [] },
+      { text: "Đặc điểm lớn nhất của quá trình phát triển dân tộc tại các nước Trung Quốc, Ấn Độ, Việt Nam, ... Chọn đáp án đúng:", options: [
+        "Các dân tộc ở các nước này hình thành rất sớm, không gắn với sự ra đời của chủ nghĩa tư bản",
+        "Sự phát triển của các dân tộc gắn liền với nhu cầu phát triển kinh tế",
+        "Sự phát triển của các dân tộc gắn liền với cuộc cách mạng tư sản do giai cấp tư sản lãnh đạo",
+        "Sự phát triển của các dân tộc gắn liền với quá trình cải tạo tự nhiên"
+      ], answer: [0] },
+      { text: "Trong 4 đặc trưng của giai cấp thì đặc trưng nào giữ vai trò chi phối các đặc trưng khác:", options: [
+        "Khác nhau về quan hệ sở hữu tư liệu sản xuất xã hội",
+        "Khác nhau về vai trò trong tổ chức lao động xã hội",
+        "Tập đoàn này có thể chiếm đoạt lao động của tập đoàn khác",
+        "Khác nhau về địa vị trong hệ thống tổ chức xã hội"
+      ], answer: [0] },
+      { text: `Kéo thả đáp án đúng vào ô tương ứng:
+Các lựa chọn để kéo thả: Sở hữu tư liệu lao động / Chiếm hữu vốn / Chiếm đoạt nguồn vốn / Chiếm đoạt vị trí / Chiếm đoạt lao động
+Đoạn văn cần điền: "Giai cấp là những tập đoàn người mà tập đoàn này có thể ______ của tập đoàn khác, do chỗ các tập đoàn đó có địa vị khác nhau trong một chế độ kinh tế xã hội nhất định"`, type: "drag",
+        items: ["Sở hữu tư liệu lao động", "Chiếm hữu vốn", "Chiếm đoạt nguồn vốn", "Chiếm đoạt vị trí", "Chiếm đoạt lao động"],
+        targets: ["Điền vào chỗ trống:"], answer: [4]
+      },
+      { text: "Em hãy chỉ ra tính đặc thù của quá trình hình thành và phát triển của dân tộc Việt Nam: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Dân tộc Việt Nam hình thành trong cuộc đấu tranh chống chủ nghĩa đế quốc xâm lược.",
+        "Các dân tộc Việt Nam liên kết với nhau để chống lại sức mạnh của giới tự nhiên, cải tạo giới tự nhiên phục vụ nhu cầu của cộng đồng.",
+        "Dân tộc Việt Nam được hình thành do sự đồng hóa các bộ tộc khác nhau thành một dân tộc thống nhất.",
+        "Dân tộc Việt Nam được hình thành gắn liền với nhu cầu dựng nước và giữ nước, với quá trình đấu tranh chống giặc ngoại xâm, bảo vệ nền văn hóa dân tộc."
+      ], answer: [1, 3], multi: true },
+      { text: "Tìm các ý đúng về vai trò của đấu tranh giai cấp trong lịch sử nhân loại? (Chọn 2 đáp án trả lời đúng)", options: [
+        "Đấu tranh giai cấp là động lực sâu xa của sự phát triển xã hội.",
+        "Lật đổ ách thống trị của giai cấp không cơ bản trong xã hội.",
+        "Đấu tranh giai cấp thực hiện cải tạo chính bản thân các giai cấp cách mạng.",
+        "Đấu tranh giai cấp cải tạo xã hội, xóa bỏ các lực lượng xã hội phản động."
+      ], answer: [2, 3], multi: true },
+      { text: `Phân loại giai cấp và tầng lớp:
+Giai cấp không cơ bản của xã hội phong kiến
+Nô lệ
+Tầng lớp trung gian
+Giới tu hành
+Giai cấp cơ bản của xã hội tư bản
+Giai cấp công nhân
+Giai cấp cơ bản của xã hội phong kiến
+Giai cấp nông dân`, invalid: true, options: [] },
+      { text: "Tìm các khẳng định đúng về các đặc trưng của dân tộc: (Chọn 2 đáp án trả lời đúng nhất)", options: [
+        "Dân tộc là một cộng đồng thống nhất về chính trị",
+        "Dân tộc là một cộng đồng người có một nhà nước và pháp luật thống nhất",
+        "Dân tộc là một cộng đồng bền vững về chính trị",
+        "Dân tộc là một cộng đồng người ổn định trên một lãnh thổ thống nhất"
+      ], answer: [1, 3], multi: true },
+      { text: "Kéo thả các đáp án khớp với các phát biểu từ 1-4 về trái dưới đây:", type: "match", rows: [
+        ["Là hình thức cộng đồng người hình thành khi xã hội có sự phân chia thành giai cấp, hình thành cùng với chế độ chiếm hữu nô lệ.", "Bộ tộc"],
+        ["Là một cộng đồng người ổn định trên một lãnh thổ thống nhất.", "Dân tộc"],
+        ["Các thành viên trong thị tộc đều tiến hành lao động chung, đều bình đẳng về quyền lợi và nghĩa vụ.", "Thị tộc"],
+        ["Bao gồm những thị tộc có quan hệ cùng huyết thống hoặc các thị tộc có quan hệ hôn nhân liên kết với nhau.", "Bộ lạc"]
+      ], choices: ["Bộ tộc", "Dân tộc", "Thị tộc", "Bộ lạc"] },
+      { text: "Kéo thả đáp án vào ô tương ứng để hoàn thiện định nghĩa về giai cấp của Lênin:\nCác lựa chọn cho sẵn: Kiến trúc thượng tầng. / Quan hệ sản xuất. / Cơ sở hạ tầng. / Tư liệu sản xuất. / Lực lượng sản xuất.\nĐoạn văn bản cần điền: “Người ta gọi giai cấp, những tập đoàn to lớn, khác nhau về địa vị của họ trong một hệ thống sản xuất xã hội nhất định trong lịch sử, về quan hệ của họ đối với những ______ (thường thì những quan hệ này được pháp luật quy định và thừa nhận), về vai trò của họ trong tổ chức lao động xã hội, và do đó khác nhau về cách thức hưởng thụ phần của cải xã hội ít hay nhiều mà họ được hưởng”", type: "drag",
+        items: ["Kiến trúc thượng tầng.", "Quan hệ sản xuất.", "Cơ sở hạ tầng.", "Tư liệu sản xuất.", "Lực lượng sản xuất."],
+        targets: ["Điền vào chỗ trống:"], answer: [3]
+      },
+      { text: "Đây là hình thức cộng đồng người hình thành khi xã hội có sự phân chia giai cấp", options: [
+        "Thị tộc", "Bộ lạc", "Bộ tộc", "Dân tộc"
+      ], answer: [2] },
+      { text: "Hãy chỉ ra đặc điểm hình thành các dân tộc ở Châu Âu: (Chọn 2 đáp án trả lời đúng nhất)", options: [
+        "Sự phát triển của các dân tộc gắn liền với phong trào đấu tranh chống chủ nghĩa đế quốc giải phóng dân tộc.",
+        "Sự phát triển của các dân tộc gắn liền với quá trình cải tạo tự nhiên.",
+        "Sự phát triển của các dân tộc gắn liền với cuộc cách mạng tư sản do giai cấp tư sản lãnh đạo.",
+        "Sự phát triển của các dân tộc là quá trình liên hiệp lại với nhau thành quốc gia thống nhất"
+      ], answer: [2, 3], multi: true },
+      { text: "Theo chủ nghĩa Mác-Lênin, giải quyết vấn đề dân tộc phải dựa trên cơ sở nào?", options: [
+        "Lợi ích cơ bản và lâu dài của dân tộc",
+        "Lợi ích trước mắt của dân tộc",
+        "Lợi ích của giai cấp thống trị",
+        "Lợi ích của tầng lớp trí thức"
+      ], answer: [0] },
+      { text: "Nội dung chủ yếu của cuộc đấu tranh giai cấp ở Việt Nam hiện nay là: (Chọn 2 đáp án trả lời đúng)", options: [
+        "Đẩy mạnh toàn diện công cuộc đổi mới và sự nghiệp công nghiệp hóa, hiện đại hóa đất nước.",
+        "Đấu tranh làm thất bại mọi âm mưu và hành động chống phá của các thế lực thù địch.",
+        "Thực hiện công bằng xã hội, chống áp bức, bất công.",
+        "Phát triển kinh tế, tạo lập cơ sở vật chất kỹ thuật."
+      ], answer: [1, 2], multi: true },
+      { text: "Ở các nước phương Tây, dân tộc hình thành trong xã hội nào?", options: [
+        "Tư bản chủ nghĩa", "Chiếm hữu nô lệ", "Phong kiến", "Cộng sản chủ nghĩa"
+      ], answer: [0] },
+      { text: "Một giai cấp chỉ thực sự thực hiện được quyền thống trị của nó đối với toàn thể xã hội khi nào? (Chọn 2 đáp án trả lời đúng nhất)", options: [
+        "Năm được tư liệu sản xuất chủ yếu",
+        "Năm được quyền lực nhà nước",
+        "Là giai cấp tiến bộ và có hệ tư tưởng khoa học",
+        "Nắm được nguồn lực nguồn lực tài chính trong xã hội"
+      ], answer: [0, 1], multi: true },
+      { text: "Nguyên nhân trực tiếp của sự ra đời giai cấp trong xã hội?", options: [
+        "Do sự phát triển lực lượng sản xuất làm xuất hiện \"của dư\" tương đối",
+        "Do sự phân hóa giữa giàu và nghèo trong xã hội",
+        "Do sự chênh lệch về khả năng giữa các tập đoàn người",
+        "Do sự xuất hiện chế độ tư hữu về tư liệu sản xuất"
+      ], answer: [3] }
+    ];
+
+    const lessons = {
+      1: { title: "Bài 1", intro: "Khám phá triết học và triết học Mác - Lênin.", questions: lesson1Questions },
+      2: { title: "Bài 2", intro: "Tìm hiểu vật chất, ý thức và mối quan hệ giữa chúng.", questions: lesson2Questions },
+      3: { title: "Bài 3", intro: "Tìm hiểu phép biện chứng duy vật và các quy luật phát triển của sự vật.", questions: lesson3Questions },
+      4: { title: "Bài 4", intro: "Tìm hiểu các nguyên lý, phạm trù và mối liên hệ phổ biến.", questions: lesson4Questions },
+      5: { title: "Bài 5", intro: "Tìm hiểu các quy luật cơ bản của phép biện chứng duy vật.", questions: lesson5Questions },
+      6: { title: "Bài 6", intro: "Tìm hiểu lý luận nhận thức và vai trò của thực tiễn.", questions: lesson6Questions },
+      7: { title: "Bài 7", intro: "Tìm hiểu lực lượng sản xuất, quan hệ sản xuất và cơ sở hạ tầng.", questions: lesson7Questions },
+      8: { title: "Bài 8", intro: "Tìm hiểu hình thái kinh tế - xã hội và ý thức xã hội.", questions: lesson8Questions },
+      9: { title: "Bài 9", intro: "Tìm hiểu giai cấp, đấu tranh giai cấp và vấn đề dân tộc.", questions: lesson9Questions }
+    };
+    const progressByLesson = Object.fromEntries(
+      Object.entries(lessons).map(([id, lesson]) => [id, {
+        current: 0,
+        score: 0,
+        streak: 0,
+        questionStates: lesson.questions.map(() => ({
+          checked: false, correct: null, draft: null, points: 0, feedback: ""
+        }))
+      }])
+    );
+    let activeLesson = 1;
+    let questions = lessons[activeLesson].questions;
+    let current = 0;
+    let score = 0;
+    let streak = 0;
+    let checked = false;
+    let questionStates = progressByLesson[activeLesson].questionStates;
+    const optionsElement = document.getElementById("options");
+    const feedbackElement = document.getElementById("feedback");
+    const checkButton = document.getElementById("checkButton");
+    const nextButton = document.getElementById("nextButton");
+    const quizCard = document.getElementById("quizCard");
+    const summary = document.getElementById("summary");
+
+    function setQuestionMenuOpen(open) {
+      const menu = document.getElementById("questionNav");
+      document.getElementById("menuToggle").setAttribute("aria-expanded", String(open));
+      menu.hidden = !open;
+      document.getElementById("menuBackdrop").hidden = !open;
+      document.body.classList.toggle("menu-open", open);
+      if (open) {
+        document.getElementById("menuClose").focus({ preventScroll: true });
+      }
+    }
+
+    function switchLesson(lessonId) {
+      if (lessonId === activeLesson) return;
+      saveDraft();
+      progressByLesson[activeLesson].current = current;
+      progressByLesson[activeLesson].score = score;
+      progressByLesson[activeLesson].streak = streak;
+
+      activeLesson = lessonId;
+      questions = lessons[activeLesson].questions;
+      const progress = progressByLesson[activeLesson];
+      current = progress.current;
+      score = progress.score;
+      streak = progress.streak;
+      questionStates = progress.questionStates;
+
+      document.getElementById("lessonIntro").textContent = lessons[activeLesson].intro;
+      document.getElementById("lesson1Button").classList.toggle("active", activeLesson === 1);
+      document.getElementById("lesson1Button").setAttribute("aria-pressed", String(activeLesson === 1));
+      document.getElementById("lesson2Button").classList.toggle("active", activeLesson === 2);
+      document.getElementById("lesson2Button").setAttribute("aria-pressed", String(activeLesson === 2));
+      document.getElementById("lesson3Button").classList.toggle("active", activeLesson === 3);
+      document.getElementById("lesson3Button").setAttribute("aria-pressed", String(activeLesson === 3));
+      document.getElementById("lesson4Button").classList.toggle("active", activeLesson === 4);
+      document.getElementById("lesson4Button").setAttribute("aria-pressed", String(activeLesson === 4));
+      document.getElementById("lesson5Button").classList.toggle("active", activeLesson === 5);
+      document.getElementById("lesson5Button").setAttribute("aria-pressed", String(activeLesson === 5));
+      document.getElementById("lesson6Button").classList.toggle("active", activeLesson === 6);
+      document.getElementById("lesson6Button").setAttribute("aria-pressed", String(activeLesson === 6));
+      document.getElementById("lesson7Button").classList.toggle("active", activeLesson === 7);
+      document.getElementById("lesson7Button").setAttribute("aria-pressed", String(activeLesson === 7));
+      document.getElementById("lesson8Button").classList.toggle("active", activeLesson === 8);
+      document.getElementById("lesson8Button").setAttribute("aria-pressed", String(activeLesson === 8));
+      document.getElementById("lesson9Button").classList.toggle("active", activeLesson === 9);
+      document.getElementById("lesson9Button").setAttribute("aria-pressed", String(activeLesson === 9));
+      document.getElementById("score").textContent = score;
+      document.getElementById("streak").textContent = streak;
+      quizCard.hidden = false;
+      summary.style.display = "none";
+      setQuestionMenuOpen(false);
+      render();
+    }
+
+    function renderQuestionNav() {
+      const list = document.getElementById("questionList");
+      list.replaceChildren();
+      questions.forEach((_, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "question-link";
+        button.textContent = `Câu ${index + 1}`;
+        button.setAttribute("aria-label", `Đi đến câu ${index + 1}`);
+        button.title = `Câu ${index + 1}${questionStates[index].checked ? " · Đã chấm" : ""}`;
+        if (index === current) {
+          button.classList.add("current");
+          button.setAttribute("aria-current", "step");
+        }
+        if (questionStates[index].checked) button.classList.add("done");
+        button.addEventListener("click", () => {
+          saveDraft();
+          current = index;
+          quizCard.hidden = false;
+          summary.style.display = "none";
+          setQuestionMenuOpen(false);
+          render();
+        });
+        list.append(button);
+      });
+      document.querySelector("#questionNav h2").textContent =
+        `Tất cả câu hỏi · ${lessons[activeLesson].title}`;
+    }
+
+    document.getElementById("lesson1Button").addEventListener("click", () => switchLesson(1));
+    document.getElementById("lesson2Button").addEventListener("click", () => switchLesson(2));
+    document.getElementById("lesson3Button").addEventListener("click", () => switchLesson(3));
+    document.getElementById("lesson4Button").addEventListener("click", () => switchLesson(4));
+    document.getElementById("lesson5Button").addEventListener("click", () => switchLesson(5));
+    document.getElementById("lesson6Button").addEventListener("click", () => switchLesson(6));
+    document.getElementById("lesson7Button").addEventListener("click", () => switchLesson(7));
+    document.getElementById("lesson8Button").addEventListener("click", () => switchLesson(8));
+    document.getElementById("lesson9Button").addEventListener("click", () => switchLesson(9));
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      setQuestionMenuOpen(document.getElementById("questionNav").hidden);
+    });
+    document.getElementById("menuClose").addEventListener("click", () => setQuestionMenuOpen(false));
+    document.getElementById("menuBackdrop").addEventListener("click", () => setQuestionMenuOpen(false));
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !document.getElementById("questionNav").hidden) {
+        setQuestionMenuOpen(false);
+        document.getElementById("menuToggle").focus();
+      }
+    });
+
+    function saveDraft() {
+      const question = questions[current];
+      if (question.type === "drag" || question.type === "match") {
+        questionStates[current].draft = [...optionsElement.querySelectorAll(".drop-target")].map(target =>
+          [...target.querySelectorAll(".drop-answer .drag-chip")].map(chip => Number(chip.dataset.item))
+        );
+      } else if (question.type === "truth") {
+        questionStates[current].draft = question.rows.map((_, index) =>
+          optionsElement.querySelector(`input[name="truth-${index}"]:checked`)?.value || ""
+        );
+      } else {
+        questionStates[current].draft = [...optionsElement.querySelectorAll("input:checked")]
+          .map(input => Number(input.value));
+      }
+    }
+
+    function render() {
+      const state = questionStates[current];
+      checked = state.checked;
+      const question = questions[current];
+      document.getElementById("questionNumber").textContent = `CÂU ${current + 1}`;
+      document.getElementById("questionKind").textContent = question.invalid ? "Cần đối chiếu tài liệu" :
+        question.type === "drag" || question.type === "match" ? "Kéo thả vào đáp án đúng" :
+        question.type === "truth" ? "Đúng / Sai" :
+        question.multi ? `Chọn ${question.answer.length} đáp án đúng` : "Chọn một đáp án";
+      document.getElementById("prompt").textContent = question.text;
+      document.getElementById("hint").textContent = question.invalid
+        ? "Lựa chọn trong tài liệu có vẻ bị lỗi hoặc thiếu nội dung. Câu này vẫn được hiển thị nhưng không tính điểm."
+        : question.type === "drag" || question.type === "match" ? "Kéo thẻ đáp án vào hàng phù hợp. Trên điện thoại, chạm một thẻ rồi chạm vào ô đích."
+        : question.multi ? `Hãy chọn đúng ${question.answer.length} đáp án rồi kiểm tra.` : "Chọn đáp án phù hợp rồi kiểm tra.";
+      optionsElement.replaceChildren();
+      feedbackElement.textContent = "";
+      feedbackElement.className = "";
+      checkButton.disabled = false;
+      nextButton.hidden = true;
+
+      if (question.type === "drag" || question.type === "match") {
+        const bank = document.createElement("div");
+        bank.className = "drag-bank";
+        bank.setAttribute("aria-label", "Các đáp án có thể kéo");
+        const items = question.type === "drag" ? question.items : question.choices;
+        items.forEach((item, itemIndex) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "drag-chip";
+          chip.draggable = true;
+          chip.dataset.item = itemIndex;
+          chip.textContent = item;
+          bank.append(chip);
+        });
+        optionsElement.append(bank);
+
+        const targetAnswers = getTargetAnswers(question);
+        const targets = question.type === "drag" ? question.targets : question.rows.map(([label]) => label);
+        targets.forEach((target, targetIndex) => {
+          const zone = document.createElement("div");
+          zone.className = "drop-target";
+          zone.dataset.target = targetIndex;
+          zone.dataset.capacity = question.type === "drag" ? targetAnswers[targetIndex].length : 1;
+          const label = document.createElement("div");
+          label.className = "drop-label";
+          label.textContent = target;
+          const answer = document.createElement("div");
+          answer.className = "drop-answer";
+          answer.textContent = "Thả nội dung vào đây";
+          zone.append(label, answer);
+          optionsElement.append(zone);
+        });
+      } else if (question.type === "truth") {
+        question.rows.forEach(([statement], rowIndex) => {
+          const row = document.createElement("div");
+          row.className = "question";
+          const text = document.createElement("p");
+          text.textContent = `${rowIndex + 1}. ${statement}`;
+          row.append(text);
+          question.choices.forEach(choice => {
+            const label = document.createElement("label");
+            label.className = "option";
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `truth-${rowIndex}`;
+            input.value = choice;
+            const answerText = document.createElement("span");
+            answerText.textContent = choice;
+            label.append(input, answerText);
+            row.append(label);
+          });
+          const rowFeedback = document.createElement("p");
+          rowFeedback.className = "truth-feedback";
+          rowFeedback.dataset.truthFeedback = rowIndex;
+          rowFeedback.setAttribute("aria-live", "polite");
+          row.append(rowFeedback);
+          optionsElement.append(row);
+        });
+      } else {
+        question.options.forEach((option, optionIndex) => {
+          const label = document.createElement("label");
+          label.className = "option";
+          const input = document.createElement("input");
+          input.type = question.multi ? "checkbox" : "radio";
+          input.name = "answer";
+          input.value = optionIndex;
+          const text = document.createElement("span");
+          text.textContent = `${String.fromCharCode(65 + optionIndex)}. ${option}`;
+          label.append(input, text);
+          optionsElement.append(label);
+        });
+      }
+
+      if (state.draft) {
+        if (question.type === "drag" || question.type === "match") {
+          state.draft.forEach((items, targetIndex) => {
+            const target = optionsElement.querySelectorAll(".drop-target")[targetIndex];
+            const answer = target.querySelector(".drop-answer");
+            answer.replaceChildren();
+            items.forEach(itemIndex => {
+              const chip = optionsElement.querySelector(`.drag-bank .drag-chip[data-item="${itemIndex}"]`);
+              if (chip) answer.append(chip);
+            });
+            refreshDropTarget(target);
+          });
+        } else if (question.type === "truth") {
+          question.rows.forEach((_, index) => {
+            const input = optionsElement.querySelector(`input[name="truth-${index}"][value="${state.draft[index]}"]`);
+            if (input) input.checked = true;
+          });
+        } else {
+          state.draft.forEach(optionIndex => {
+            const input = optionsElement.querySelector(`input[value="${optionIndex}"]`);
+            if (input) input.checked = true;
+          });
+        }
+      }
+
+      if (state.checked) {
+        if (question.type === "truth") {
+          question.rows.forEach((_, rowIndex) => updateTruthFeedback(question, rowIndex));
+        } else if (question.answer) {
+          revealChoiceFeedback(question);
+        }
+        feedbackElement.textContent = state.feedback;
+        feedbackElement.className = state.correct ? "good" : "bad";
+        checkButton.disabled = true;
+        nextButton.hidden = true;
+        optionsElement.querySelectorAll("input, select, button").forEach(input => input.disabled = true);
+      }
+      document.getElementById("count").textContent = `${current + 1}/${questions.length}`;
+      document.getElementById("progressBar").style.width = `${(current / questions.length) * 100}%`;
+      document.querySelector(".progress").setAttribute("aria-valuemax", questions.length);
+      document.querySelector(".progress").setAttribute("aria-valuenow", current);
+      document.getElementById("menuToggle").setAttribute("aria-label", `Mở danh sách ${questions.length} câu hỏi`);
+      document.getElementById("questionNav").setAttribute("aria-label", `Danh sách ${questions.length} câu hỏi`);
+      updateAnswerRequirements();
+      renderQuestionNav();
+    }
+
+    function updateAnswerRequirements() {
+      if (checked) {
+        checkButton.disabled = true;
+        return;
+      }
+      const question = questions[current];
+      let ready = true;
+
+      if (question.type === "truth") {
+        ready = question.rows.every((_, rowIndex) =>
+          optionsElement.querySelector(`input[name="truth-${rowIndex}"]:checked`)
+        );
+      } else if (question.type === "drag" || question.type === "match") {
+        ready = [...optionsElement.querySelectorAll(".drop-target")].every(target =>
+          target.querySelectorAll(".drop-answer .drag-chip").length === Number(target.dataset.capacity)
+        );
+      } else if (question.multi) {
+        ready = optionsElement.querySelectorAll("input:checked").length === question.answer.length;
+      } else if (question.answer) {
+        ready = optionsElement.querySelectorAll("input:checked").length === 1;
+      }
+
+      checkButton.disabled = !ready;
+    }
+
+    function revealChoiceFeedback(question) {
+      if (!question.answer || question.invalid) return;
+      const selected = [...optionsElement.querySelectorAll("input:checked")]
+        .map(input => Number(input.value));
+      optionsElement.querySelectorAll(".option").forEach(option =>
+        option.classList.remove("choice-correct", "choice-incorrect")
+      );
+
+      if (selected.length === 0) {
+        feedbackElement.textContent = "";
+        feedbackElement.className = "";
+        return;
+      }
+
+      const correctText = question.answer.map(index => ` ${String.fromCharCode(65 + index)}. ${question.options[index]}`).join(";");
+      if (question.multi) {
+        const correctSet = new Set(question.answer);
+        optionsElement.querySelectorAll(".option").forEach((option, index) => {
+          const input = option.querySelector("input");
+          if (correctSet.has(index)) option.classList.add("choice-correct");
+          if (input.checked && !correctSet.has(index)) option.classList.add("choice-incorrect");
+        });
+        const selectedSet = new Set(selected);
+        const isComplete = selected.length === question.answer.length &&
+          question.answer.every(index => selectedSet.has(index));
+        return;
+      }
+
+      const selectedIndex = selected[0];
+      const selectedOption = optionsElement.querySelector(`input[value="${selectedIndex}"]`)?.closest(".option");
+      const correctIndex = question.answer[0];
+      const correctOption = optionsElement.querySelector(`input[value="${correctIndex}"]`)?.closest(".option");
+      if (selectedIndex === correctIndex) {
+        selectedOption?.classList.add("choice-correct");
+      } else {
+        selectedOption?.classList.add("choice-incorrect");
+        correctOption?.classList.add("choice-correct");
+      }
+    }
+
+    function updateTruthFeedback(question, rowIndex) {
+      const selected = optionsElement.querySelector(`input[name="truth-${rowIndex}"]:checked`);
+      const feedback = optionsElement.querySelector(`[data-truth-feedback="${rowIndex}"]`);
+      if (!feedback) return;
+      feedback.textContent = "";
+      feedback.className = "truth-feedback";
+      const row = feedback.closest(".question");
+      row.querySelectorAll(".option").forEach(option => {
+        option.classList.remove("truth-correct", "truth-incorrect");
+      });
+      const correctAnswer = question.rows[rowIndex][1];
+      if (!selected) return;
+      row.querySelectorAll(`input[name="truth-${rowIndex}"]`).forEach(input => {
+        if (input.value === correctAnswer) input.closest(".option").classList.add("truth-correct");
+      });
+
+      const selectedOption = selected.closest(".option");
+      if (selected.value === correctAnswer) {
+        feedback.textContent = `Bạn chọn “${selected.value}” — chính xác!`;
+        feedback.classList.add("good");
+      } else {
+        selectedOption.classList.add("truth-incorrect");
+        feedback.textContent = `Bạn chọn “${selected.value}” — chưa đúng. Đáp án đúng là “${correctAnswer}”.`;
+        feedback.classList.add("bad");
+      }
+    }
+
+    function isCorrect(question) {
+      if (question.invalid) return null;
+      if (question.type === "drag" || question.type === "match") {
+        const targetAnswers = getTargetAnswers(question);
+        return [...optionsElement.querySelectorAll(".drop-target")].every((target, index) => {
+          const assigned = [...target.querySelectorAll(".drag-chip")]
+            .map(chip => Number(chip.dataset.item))
+            .sort((a, b) => a - b);
+          const expected = [...targetAnswers[index]].sort((a, b) => a - b);
+          return assigned.length === expected.length &&
+            assigned.every((item, itemIndex) => item === expected[itemIndex]);
+        });
+      }
+      if (question.type === "truth") {
+        return question.rows.every(([_, answer], index) =>
+          optionsElement.querySelector(`input[name="truth-${index}"]:checked`)?.value === answer
+        );
+      }
+      const selected = [...optionsElement.querySelectorAll("input:checked")]
+        .map(input => Number(input.value)).sort((a, b) => a - b);
+      const expected = [...question.answer].sort((a, b) => a - b);
+      return selected.length === expected.length && selected.every((value, index) => value === expected[index]);
+    }
+
+    let selectedDragItem = null;
+    function getTargetAnswers(question) {
+      if (question.type === "match") {
+        return question.rows.map(([, answer]) => [question.choices.indexOf(answer)]);
+      }
+      return question.targetAnswers || question.answer.map(item => [item]);
+    }
+
+    function refreshDropTarget(target) {
+      const answer = target.querySelector(".drop-answer");
+      const chips = [...answer.querySelectorAll(".drag-chip")];
+      target.dataset.items = chips.map(chip => chip.dataset.item).join(",");
+      if (chips.length === 0) answer.textContent = "Thả nội dung vào đây";
+    }
+
+    function assignDragItem(itemIndex, targetIndex) {
+      const question = questions[current];
+      if ((question.type !== "drag" && question.type !== "match") || checked || !Number.isInteger(itemIndex)) return;
+      const targets = [...optionsElement.querySelectorAll(".drop-target")];
+      const bank = optionsElement.querySelector(".drag-bank");
+      const target = targets[targetIndex];
+      if (!target) return;
+      const chip = optionsElement.querySelector(`.drag-chip[data-item="${itemIndex}"]`);
+      if (!chip) return;
+      const existingTarget = chip.closest(".drop-target");
+      if (existingTarget) {
+        chip.remove();
+        refreshDropTarget(existingTarget);
+      }
+      const targetChips = target.querySelectorAll(".drop-answer .drag-chip");
+      if (targetChips.length >= Number(target.dataset.capacity)) {
+        if (question.type !== "match") {
+          bank.append(chip);
+          return;
+        }
+        targetChips.forEach(existingChip => bank.append(existingChip));
+      }
+      const answer = target.querySelector(".drop-answer");
+      if (!targetChips.length) answer.replaceChildren();
+      answer.append(chip);
+      refreshDropTarget(target);
+      chip.classList.remove("selected");
+      selectedDragItem = null;
+      updateAnswerRequirements();
+    }
+
+    optionsElement.addEventListener("click", event => {
+      const option = event.target.closest(".option");
+      if (option && !checked) {
+        event.preventDefault();
+        const input = option.querySelector("input");
+        if (!input || input.disabled) return;
+        if (input.type === "radio") {
+          optionsElement.querySelectorAll('input[type="radio"]').forEach(item => {
+            if (item.name === input.name) item.checked = false;
+          });
+          input.checked = true;
+        } else {
+          input.checked = !input.checked;
+        }
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        return;
+      }
+      const chip = event.target.closest(".drag-chip");
+      const target = event.target.closest(".drop-target");
+      if (chip) {
+        optionsElement.querySelectorAll(".drag-chip").forEach(item =>
+          item.classList.remove("selected")
+        );
+        selectedDragItem = Number(chip.dataset.item);
+        chip.classList.add("selected");
+      } else if (target && selectedDragItem !== null) {
+        assignDragItem(selectedDragItem, Number(target.dataset.target));
+        updateAnswerRequirements();
+      }
+    });
+
+    optionsElement.addEventListener("change", event => {
+      if (checked && event.target.matches('input[type="radio"][name^="truth-"]')) {
+        updateTruthFeedback(questions[current], Number(event.target.name.slice("truth-".length)));
+      }
+      updateAnswerRequirements();
+    });
+
+    optionsElement.addEventListener("dragstart", event => {
+      const chip = event.target.closest(".drag-chip");
+      if (!chip || checked) return;
+      event.dataTransfer.setData("text/plain", chip.dataset.item);
+      event.dataTransfer.effectAllowed = "move";
+    });
+    optionsElement.addEventListener("dragover", event => {
+      const target = event.target.closest(".drop-target");
+      if (!target || checked) return;
+      event.preventDefault();
+      target.classList.add("over");
+    });
+    optionsElement.addEventListener("dragleave", event => {
+      const target = event.target.closest(".drop-target");
+      if (target && !target.contains(event.relatedTarget)) target.classList.remove("over");
+    });
+    optionsElement.addEventListener("drop", event => {
+      const target = event.target.closest(".drop-target");
+      if (!target || checked) return;
+      event.preventDefault();
+      target.classList.remove("over");
+      assignDragItem(Number(event.dataTransfer.getData("text/plain")), Number(target.dataset.target));
+    });
+
+    checkButton.addEventListener("click", () => {
+      if (checked) return;
+      updateAnswerRequirements();
+      if (checkButton.disabled) {
+        const question = questions[current];
+        if (question.multi) {
+          feedbackElement.textContent = `Hãy chọn đủ ${question.answer.length} đáp án trước khi kiểm tra.`;
+        } else if (question.type === "truth") {
+          feedbackElement.textContent = "Hãy chọn Đúng hoặc Sai cho tất cả các mệnh đề.";
+        } else {
+          feedbackElement.textContent = "Hãy hoàn thành đáp án trước khi kiểm tra.";
+        }
+        feedbackElement.className = "bad";
+        return;
+      }
+      const correct = isCorrect(questions[current]);
+      checked = true;
+      saveDraft();
+      checkButton.disabled = true;
+      nextButton.hidden = false;
+      const state = questionStates[current];
+      state.checked = true;
+      state.correct = correct;
+      if (correct === null) {
+        feedbackElement.textContent = "Câu này chưa tính điểm vì đáp án trong tài liệu chưa rõ.";
+        feedbackElement.className = "bad";
+        streak = 0;
+      } else if (correct) {
+        const points = 10 + Math.min(streak, 5) * 2;
+        score += points;
+        state.points = points;
+        streak++;
+        feedbackElement.textContent = `Chính xác! +${points} điểm${streak > 1 ? ` · Chuỗi ${streak} câu!` : ""}`;
+        feedbackElement.className = "good";
+      } else {
+        streak = 0;
+        feedbackElement.textContent = "Chưa chính xác. Hãy xem lại nội dung bài học rồi thử câu tiếp theo.";
+        feedbackElement.className = "bad";
+      }
+      const question = questions[current];
+      if (question.type === "truth") {
+        question.rows.forEach((_, rowIndex) => updateTruthFeedback(question, rowIndex));
+        const selectedCount = question.rows.filter(([_, answer], rowIndex) =>
+          optionsElement.querySelector(`input[name="truth-${rowIndex}"]:checked`)?.value === answer
+        ).length;
+        feedbackElement.textContent += ` Đáp án đúng: ${selectedCount}/${question.rows.length} mệnh đề chính xác.`;
+      } else if (question.answer) {
+        revealChoiceFeedback(question);
+        const correctLabels = question.answer.map(index =>
+          `${String.fromCharCode(65 + index)}. ${question.options[index]}`
+        ).join("; ");
+        const explanation = question.explanation ? ` ${question.explanation}` : "";
+        feedbackElement.textContent += ` Giải thích: đáp án đúng là ${correctLabels}.${explanation}`;
+        feedbackElement.className = correct ? "good" : "bad";
+      }
+      state.feedback = feedbackElement.textContent;
+      document.getElementById("score").textContent = score;
+      document.getElementById("streak").textContent = streak;
+      optionsElement.querySelectorAll("input, select, button").forEach(input => input.disabled = true);
+      renderQuestionNav();
+    });
+
+    nextButton.addEventListener("click", () => {
+      saveDraft();
+      if (current < questions.length - 1) {
+        current++;
+        render();
+        return;
+      }
+      quizCard.hidden = true;
+      summary.style.display = "block";
+      document.getElementById("progressBar").style.width = "100%";
+      document.querySelector(".progress").setAttribute("aria-valuenow", questions.length);
+      document.getElementById("summaryText").textContent =
+        `Bạn đã hoàn thành ${questions.length} câu và đạt ${score} điểm.`;
+      document.getElementById("summaryTitle").textContent =
+        score >= questions.length * 10 ? "🏆 Xuất sắc!" : "🎉 Hoàn thành chặng!";
+    });
+
+    document.getElementById("restartButton").addEventListener("click", () => {
+      current = 0;
+      score = 0;
+      streak = 0;
+      questionStates.forEach(state => {
+        state.checked = false;
+        state.correct = null;
+        state.draft = null;
+        state.points = 0;
+        state.feedback = "";
+      });
+      document.getElementById("score").textContent = "0";
+      document.getElementById("streak").textContent = "0";
+      quizCard.hidden = false;
+      summary.style.display = "none";
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
